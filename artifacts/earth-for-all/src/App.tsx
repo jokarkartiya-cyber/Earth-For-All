@@ -15,6 +15,7 @@ import Technology from "@/pages/technology";
 import Ideas from "@/pages/ideas";
 import Report from "@/pages/report";
 import Articles from "@/pages/articles";
+import Resources from "@/pages/resources";
 
 const queryClient = new QueryClient();
 
@@ -31,6 +32,7 @@ function Router() {
         <Route path="/ideas" component={Ideas} />
         <Route path="/report" component={Report} />
         <Route path="/articles" component={Articles} />
+        <Route path="/resources" component={Resources} />
         <Route component={NotFound} />
       </Switch>
     </MainLayout>

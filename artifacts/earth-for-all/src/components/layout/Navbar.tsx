@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { AnimatePresence, motion, useScroll, useTransform } from "framer-motion";
-import { Menu, X, Globe, Droplets, TreePine, Bird, Zap, Building2, Lightbulb, AlertTriangle, BookOpen } from "lucide-react";
+import { Menu, X, Globe, Droplets, TreePine, Bird, Zap, Lightbulb, AlertTriangle, BookOpen, Database } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 
@@ -13,6 +13,7 @@ const NAV_LINKS = [
   { href: "/ideas", label: "Ideas", icon: Lightbulb },
   { href: "/report", label: "Report", icon: AlertTriangle },
   { href: "/articles", label: "Learn", icon: BookOpen },
+  { href: "/resources", label: "Resources", icon: Database },
 ];
 
 export function Navbar() {
