@@ -3,20 +3,27 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Earth For All API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: ideas
+    description: Community ideas
+  - name: reports
+    description: Problem reports
+  - name: articles
+    description: Educational articles
+  - name: stats
+    description: Platform statistics
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +31,203 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /stats:
+    get:
+      operationId: getStats
+      tags: [stats]
+      summary: Get platform-wide stats
+      responses:
+        "200":
+          description: Platform stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlatformStats"
+
+  /ideas:
+    get:
+      operationId: listIdeas
+      tags: [ideas]
+      summary: List community ideas
+      parameters:
+        - in: query
+          name: category
+          schema:
+            type: string
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: List of ideas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Idea"
+    post:
+      operationId: createIdea
+      tags: [ideas]
+      summary: Submit a new idea
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IdeaInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Idea"
+
+  /ideas/{id}/upvote:
+    post:
+      operationId: upvoteIdea
+      tags: [ideas]
+      summary: Upvote an idea
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Updated idea
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Idea"
+
+  /reports:
+    get:
+      operationId: listReports
+      tags: [reports]
+      summary: List problem reports
+      parameters:
+        - in: query
+          name: type
+          schema:
+            type: string
+        - in: query
+          name: status
+          schema:
+            type: string
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: List of reports
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Report"
+    post:
+      operationId: createReport
+      tags: [reports]
+      summary: Submit a problem report
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReportInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Report"
+
+  /articles:
+    get:
+      operationId: listArticles
+      tags: [articles]
+      summary: List educational articles
+      parameters:
+        - in: query
+          name: category
+          schema:
+            type: string
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+      responses:
+        "200":
+          description: List of articles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Article"
+
+  /articles/{id}:
+    get:
+      operationId: getArticle
+      tags: [articles]
+      summary: Get a single article
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Article
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Article"
+        "404":
+          description: Not found
+
+  /ideas/recent:
+    get:
+      operationId: getRecentIdeas
+      tags: [ideas]
+      summary: Get recent ideas across all categories
+      responses:
+        "200":
+          description: Recent ideas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Idea"
+
+  /reports/recent:
+    get:
+      operationId: getRecentReports
+      tags: [reports]
+      summary: Get recent problem reports
+      responses:
+        "200":
+          description: Recent reports
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Report"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +238,125 @@ components:
       required:
         - status
 
+    PlatformStats:
+      type: object
+      required: [totalIdeas, totalReports, totalArticles, ideasByCategory, reportsByType]
+      properties:
+        totalIdeas:
+          type: integer
+        totalReports:
+          type: integer
+        totalArticles:
+          type: integer
+        ideasByCategory:
+          type: array
+          items:
+            $ref: "#/components/schemas/CategoryCount"
+        reportsByType:
+          type: array
+          items:
+            $ref: "#/components/schemas/CategoryCount"
+
+    CategoryCount:
+      type: object
+      required: [category, count]
+      properties:
+        category:
+          type: string
+        count:
+          type: integer
+
+    Idea:
+      type: object
+      required: [id, title, description, category, authorName, upvotes, createdAt]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        category:
+          type: string
+          description: "clean-earth | animal-welfare | forest | water | technology | cities"
+        authorName:
+          type: string
+        upvotes:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+
+    IdeaInput:
+      type: object
+      required: [title, description, category, authorName]
+      properties:
+        title:
+          type: string
+          minLength: 5
+        description:
+          type: string
+          minLength: 10
+        category:
+          type: string
+        authorName:
+          type: string
+
+    Report:
+      type: object
+      required: [id, type, description, location, status, createdAt]
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+          description: "pollution | animal-emergency | tree-cutting | water-pollution | garbage"
+        description:
+          type: string
+        location:
+          type: string
+        status:
+          type: string
+          description: "pending | in-progress | resolved"
+        creporterName:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+
+    ReportInput:
+      type: object
+      required: [type, description, location]
+      properties:
+        type:
+          type: string
+        description:
+          type: string
+          minLength: 10
+        location:
+          type: string
+        reporterName:
+          type: string
+
+    Article:
+      type: object
+      required: [id, title, summary, category, readingTimeMinutes, createdAt]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        summary:
+          type: string
+        content:
+          type: ["string", "null"]
+        category:
+          type: string
+          description: "clean-earth | animal-welfare | forest | water | technology | future-cities"
+        readingTimeMinutes:
+          type: integer
+        imageUrl:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time

@@ -1,0 +1,433 @@
+import { motion, useScroll, useTransform } from "framer-motion";
+import { Link } from "wouter";
+import { useRef } from "react";
+import { ArrowRight, Globe, Lightbulb, AlertTriangle, BookOpen, TrendingUp } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  useGetStats,
+  useGetRecentIdeas,
+  useGetRecentReports,
+  useListArticles,
+} from "@workspace/api-client-react";
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
+
+const CAUSES = [
+  { href: "/clean-earth", label: "Clean Earth", desc: "Plastic, waste management, zero-waste cities", color: "from-emerald-900/50 to-emerald-800/20", border: "border-emerald-600/30", badge: "bg-emerald-900/60 text-emerald-300", icon: "♻️ " },
+  { href: "/animals", label: "Animal Welfare", desc: "Water stations, feeding, rescue tech", color: "from-amber-900/50 to-amber-800/20", border: "border-amber-600/30", badge: "bg-amber-900/60 text-amber-300", icon: "🐾 " },
+  { href: "/forest", label: "Forest & Nature", desc: "Urban forests, tree planting, biodiversity", color: "from-green-900/50 to-green-800/20", border: "border-green-600/30", badge: "bg-green-900/60 text-green-300", icon: "🌳 " },
+  { href: "/water", label: "Water for All", desc: "Conservation, harvesting, clean rivers", color: "from-blue-900/50 to-blue-800/20", border: "border-blue-600/30", badge: "bg-blue-900/60 text-blue-300", icon: "💧 " },
+  { href: "/technology", label: "Innovation Lab", desc: "AI, smart cities, green architecture", color: "from-indigo-900/50 to-indigo-800/20", border: "border-indigo-600/30", badge: "bg-indigo-900/60 text-indigo-300", icon: "⚡ " },
+  { href: "/articles", label: "Education Hub", desc: "Learn, share, and inspire change", color: "from-teal-900/50 to-teal-800/20", border: "border-teal-600/30", badge: "bg-teal-900/60 text-teal-300", icon: "📖 " },
+];
+
+const CHART_COLORS = ["#10b981", "#f59e0b", "#3b82f6", "#6366f1", "#f97316", "#14b8a6"];
+
+const CATEGORY_LABELS: Record<string, string> = {
+  "clean-earth": "Clean Earth",
+  "animal-welfare": "Animals",
+  "forest": "Forest",
+  "water": "Water",
+  "technology": "Technology",
+  "cities": "Cities",
+};
+
+const STATUS_COLORS: Record<string, string> = {
+  pending: "bg-yellow-900/40 text-yellow-300 border-yellow-700/50",
+  "in-progress": "bg-blue-900/40 text-blue-300 border-blue-700/50",
+  resolved: "bg-emerald-900/40 text-emerald-300 border-emerald-700/50",
+};
+
+const TYPE_LABELS: Record<string, string> = {
+  pollution: "Pollution",
+  "animal-emergency": "Animal Emergency",
+  "tree-cutting": "Tree Cutting",
+  "water-pollution": "Water Pollution",
+  garbage: "Garbage",
+};
+
+export default function Home() {
+  const heroRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
+  const y = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
+  const opacity = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
+
+  const { data: stats } = useGetStats();
+  const { data: recentIdeas } = useGetRecentIdeas();
+  const { data: recentReports } = useGetRecentReports();
+  const { data: articles } = useListArticles({ limit: 3 });
+
+  const chartData = stats?.ideasByCategory?.map((c) => ({
+    name: CATEGORY_LABELS[c.category] ?? c.category,
+    value: c.count,
+  })) ?? [];
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    show: { opacity: 1, transition: { staggerChildren: 0.1 } },
+  };
+  const itemVariants = {
+    hidden: { opacity: 0, y: 24 },
+    show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] } },
+  };
+
+  return (
+    <div className="flex flex-col">
+      {/* HERO */}
+      <section ref={heroRef} className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20">
+        {/* Animated background */}
+        <motion.div style={{ y }} className="absolute inset-0 pointer-events-none">
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_0%,rgba(16,185,129,0.15)_0%,transparent_60%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_80%_80%,rgba(59,130,246,0.08)_0%,transparent_50%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_20%_60%,rgba(245,158,11,0.06)_0%,transparent_40%)]" />
+          {/* Grid lines */}
+          <div
+            className="absolute inset-0 opacity-[0.03]"
+            style={{
+              backgroundImage: "linear-gradient(hsl(152 40% 50%) 1px, transparent 1px), linear-gradient(90deg, hsl(152 40% 50%) 1px, transparent 1px)",
+              backgroundSize: "80px 80px",
+            }}
+          />
+        </motion.div>
+
+        <motion.div style={{ opacity }} className="relative z-10 container mx-auto px-4 text-center max-w-5xl">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.1 }}
+          >
+            <span className="inline-block px-4 py-1.5 rounded-full text-xs font-semibold tracking-widest uppercase border border-emerald-700/50 text-emerald-400 bg-emerald-900/30 mb-8">
+              Global Mission Platform
+            </span>
+          </motion.div>
+
+          <motion.h1
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            className="text-5xl md:text-7xl lg:text-8xl font-bold leading-tight mb-4"
+          >
+            <span className="text-gradient-primary">Earth For All</span>
+          </motion.h1>
+
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.35 }}
+            className="text-xl md:text-2xl text-emerald-400/80 font-medium tracking-wider mb-8"
+          >
+            धरती सबकी है
+          </motion.p>
+
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.45 }}
+            className="text-lg md:text-xl text-white/60 max-w-2xl mx-auto leading-relaxed mb-12"
+          >
+            The Earth does not belong only to humans. Every animal, bird, tree, river, and living being has equal value.
+            Our technology and progress must benefit all life — not just one species.
+          </motion.p>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.55 }}
+            className="flex flex-col sm:flex-row gap-4 justify-center"
+          >
+            <Button asChild size="lg" className="bg-emerald-600 hover:bg-emerald-500 text-white border-0 shadow-[0_0_30px_rgba(5,150,105,0.4)] hover:shadow-[0_0_50px_rgba(5,150,105,0.6)] text-base px-8 h-14 transition-all">
+              <Link href="/ideas">Join the Mission <ArrowRight className="ml-2 w-5 h-5" /></Link>
+            </Button>
+            <Button asChild size="lg" variant="outline" className="border-white/20 text-white hover:bg-white/5 text-base px-8 h-14">
+              <Link href="/report">Report an Issue</Link>
+            </Button>
+          </motion.div>
+
+          {/* Stats */}
+          {stats && (
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.7 }}
+              className="grid grid-cols-3 gap-6 mt-20 max-w-lg mx-auto"
+            >
+              {[
+                { value: stats.totalIdeas, label: "Ideas Shared" },
+                { value: stats.totalReports, label: "Issues Reported" },
+                { value: stats.totalArticles, label: "Articles" },
+              ].map((s) => (
+                <div key={s.label} className="text-center">
+                  <div className="text-3xl md:text-4xl font-bold text-emerald-400">{s.value}</div>
+                  <div className="text-xs text-white/40 mt-1 uppercase tracking-wider">{s.label}</div>
+                </div>
+              ))}
+            </motion.div>
+          )}
+        </motion.div>
+
+        {/* Scroll hint */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1.5 }}
+          className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2"
+        >
+          <span className="text-xs text-white/30 uppercase tracking-widest">Scroll</span>
+          <motion.div
+            animate={{ y: [0, 8, 0] }}
+            transition={{ duration: 1.5, repeat: Infinity }}
+            className="w-5 h-8 border border-white/20 rounded-full flex items-start justify-center pt-1.5"
+          >
+            <div className="w-1 h-1.5 rounded-full bg-white/40" />
+          </motion.div>
+        </motion.div>
+      </section>
+
+      {/* CAUSES GRID */}
+      <section className="py-24 container mx-auto px-4">
+        <motion.div
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, margin: "-100px" }}
+          variants={containerVariants}
+        >
+          <motion.div variants={itemVariants} className="text-center mb-16">
+            <h2 className="text-3xl md:text-5xl font-bold text-white mb-4">
+              Six Causes. One Planet.
+            </h2>
+            <p className="text-white/50 max-w-xl mx-auto text-lg">
+              Every mission, every idea, every report is a step toward a world where all life thrives together.
+            </p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {CAUSES.map((cause) => (
+              <motion.div key={cause.href} variants={itemVariants}>
+                <Link href={cause.href}>
+                  <div className={`group relative overflow-hidden rounded-2xl border ${cause.border} bg-gradient-to-br ${cause.color} p-6 h-full cursor-pointer hover:scale-[1.02] transition-all duration-300 hover:shadow-[0_0_40px_rgba(16,185,129,0.1)]`}>
+                    <div className="absolute inset-0 bg-gradient-to-br from-white/0 to-white/0 group-hover:from-white/[0.02] group-hover:to-white/[0.02] transition-all duration-500" />
+                    <div className={`inline-block text-xs font-semibold px-3 py-1 rounded-full mb-4 ${cause.badge}`}>
+                      {cause.icon}{cause.label}
+                    </div>
+                    <p className="text-white/60 text-sm leading-relaxed">{cause.desc}</p>
+                    <div className="mt-6 flex items-center gap-2 text-white/40 group-hover:text-white/70 transition-colors text-sm">
+                      <span>Explore</span>
+                      <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                    </div>
+                  </div>
+                </Link>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+      </section>
+
+      {/* STATS + CHART */}
+      {stats && chartData.length > 0 && (
+        <section className="py-16 bg-white/[0.02] border-y border-white/5">
+          <div className="container mx-auto px-4">
+            <motion.div
+              initial="hidden"
+              whileInView="show"
+              viewport={{ once: true }}
+              variants={containerVariants}
+              className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center"
+            >
+              <motion.div variants={itemVariants}>
+                <h2 className="text-3xl font-bold text-white mb-4">Community in Action</h2>
+                <p className="text-white/50 mb-8">Ideas span every domain — from plastic-free cities to animal rescue technology. Together, we're mapping the future.</p>
+                <div className="grid grid-cols-3 gap-4">
+                  {[
+                    { n: stats.totalIdeas, label: "Ideas", color: "text-emerald-400" },
+                    { n: stats.totalReports, label: "Reports", color: "text-amber-400" },
+                    { n: stats.totalArticles, label: "Articles", color: "text-blue-400" },
+                  ].map((s) => (
+                    <div key={s.label} className="bg-white/5 border border-white/10 rounded-xl p-4 text-center">
+                      <div className={`text-2xl font-bold ${s.color}`}>{s.n}</div>
+                      <div className="text-xs text-white/40 mt-1">{s.label}</div>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+              <motion.div variants={itemVariants} className="flex flex-col items-center">
+                <h3 className="text-lg font-semibold text-white/70 mb-6">Ideas by Category</h3>
+                <ResponsiveContainer width="100%" height={220}>
+                  <PieChart>
+                    <Pie data={chartData} cx="50%" cy="50%" innerRadius={55} outerRadius={90} paddingAngle={3} dataKey="value">
+                      {chartData.map((_, i) => (
+                        <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      contentStyle={{ background: "hsl(152 47% 7%)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "8px", color: "white" }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="flex flex-wrap gap-3 justify-center mt-4">
+                  {chartData.map((d, i) => (
+                    <div key={d.name} className="flex items-center gap-1.5 text-xs text-white/60">
+                      <div className="w-2.5 h-2.5 rounded-full" style={{ background: CHART_COLORS[i % CHART_COLORS.length] }} />
+                      {d.name}
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            </motion.div>
+          </div>
+        </section>
+      )}
+
+      {/* RECENT IDEAS */}
+      {recentIdeas && recentIdeas.length > 0 && (
+        <section className="py-24 container mx-auto px-4">
+          <motion.div initial="hidden" whileInView="show" viewport={{ once: true }} variants={containerVariants}>
+            <motion.div variants={itemVariants} className="flex items-center justify-between mb-12">
+              <div>
+                <div className="flex items-center gap-3 mb-3">
+                  <Lightbulb className="w-5 h-5 text-amber-400" />
+                  <span className="text-xs font-semibold uppercase tracking-widest text-amber-400/70">Community Ideas</span>
+                </div>
+                <h2 className="text-3xl font-bold text-white">Recent Ideas</h2>
+              </div>
+              <Button asChild variant="ghost" className="text-white/50 hover:text-white hidden sm:flex">
+                <Link href="/ideas">View all <ArrowRight className="ml-2 w-4 h-4" /></Link>
+              </Button>
+            </motion.div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              {recentIdeas.slice(0, 6).map((idea) => (
+                <motion.div key={idea.id} variants={itemVariants} data-testid={`idea-card-${idea.id}`}
+                  className="bg-white/[0.03] border border-white/10 rounded-2xl p-6 hover:bg-white/[0.06] hover:border-white/20 transition-all duration-300 group">
+                  <div className={`inline-block text-xs font-semibold px-2.5 py-1 rounded-full mb-4 border ${getCategoryStyle(idea.category)}`}>
+                    {CATEGORY_LABELS[idea.category] ?? idea.category}
+                  </div>
+                  <h3 className="font-semibold text-white text-sm leading-snug mb-2 group-hover:text-emerald-300 transition-colors">{idea.title}</h3>
+                  <p className="text-white/40 text-xs leading-relaxed line-clamp-3">{idea.description}</p>
+                  <div className="mt-4 flex items-center justify-between text-xs text-white/30">
+                    <span>{idea.authorName}</span>
+                    <span className="flex items-center gap-1 text-emerald-500">
+                      <TrendingUp className="w-3 h-3" /> {idea.upvotes}
+                    </span>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        </section>
+      )}
+
+      {/* RECENT REPORTS */}
+      {recentReports && recentReports.length > 0 && (
+        <section className="py-16 bg-white/[0.02] border-y border-white/5">
+          <div className="container mx-auto px-4">
+            <motion.div initial="hidden" whileInView="show" viewport={{ once: true }} variants={containerVariants}>
+              <motion.div variants={itemVariants} className="flex items-center justify-between mb-10">
+                <div>
+                  <div className="flex items-center gap-3 mb-3">
+                    <AlertTriangle className="w-5 h-5 text-red-400" />
+                    <span className="text-xs font-semibold uppercase tracking-widest text-red-400/70">Active Reports</span>
+                  </div>
+                  <h2 className="text-3xl font-bold text-white">Recent Issues</h2>
+                </div>
+                <Button asChild variant="ghost" className="text-white/50 hover:text-white hidden sm:flex">
+                  <Link href="/report">View all <ArrowRight className="ml-2 w-4 h-4" /></Link>
+                </Button>
+              </motion.div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {recentReports.slice(0, 4).map((report) => (
+                  <motion.div key={report.id} variants={itemVariants} data-testid={`report-card-${report.id}`}
+                    className="bg-white/[0.03] border border-white/10 rounded-xl p-5 flex gap-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-2 flex-wrap">
+                        <Badge variant="outline" className="text-xs border-red-800/50 text-red-300 bg-red-900/20">
+                          {TYPE_LABELS[report.type] ?? report.type}
+                        </Badge>
+                        <span className={`text-xs px-2 py-0.5 rounded-full border ${STATUS_COLORS[report.status] ?? "bg-white/10 text-white/60 border-white/20"}`}>
+                          {report.status}
+                        </span>
+                      </div>
+                      <p className="text-white/70 text-sm line-clamp-2">{report.description}</p>
+                      <p className="text-white/30 text-xs mt-2">{report.location}</p>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+          </div>
+        </section>
+      )}
+
+      {/* RECENT ARTICLES */}
+      {articles && articles.length > 0 && (
+        <section className="py-24 container mx-auto px-4">
+          <motion.div initial="hidden" whileInView="show" viewport={{ once: true }} variants={containerVariants}>
+            <motion.div variants={itemVariants} className="flex items-center justify-between mb-12">
+              <div>
+                <div className="flex items-center gap-3 mb-3">
+                  <BookOpen className="w-5 h-5 text-blue-400" />
+                  <span className="text-xs font-semibold uppercase tracking-widest text-blue-400/70">Education Hub</span>
+                </div>
+                <h2 className="text-3xl font-bold text-white">Learn &amp; Explore</h2>
+              </div>
+              <Button asChild variant="ghost" className="text-white/50 hover:text-white hidden sm:flex">
+                <Link href="/articles">All articles <ArrowRight className="ml-2 w-4 h-4" /></Link>
+              </Button>
+            </motion.div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {articles.slice(0, 3).map((article) => (
+                <motion.div key={article.id} variants={itemVariants} data-testid={`article-card-${article.id}`}
+                  className="bg-white/[0.03] border border-white/10 rounded-2xl overflow-hidden hover:border-white/20 transition-all duration-300 group">
+                  <div className="h-40 bg-gradient-to-br from-emerald-900/40 to-blue-900/20 flex items-center justify-center">
+                    <Globe className="w-12 h-12 text-emerald-600/50" />
+                  </div>
+                  <div className="p-5">
+                    <div className={`inline-block text-xs font-semibold px-2.5 py-1 rounded-full mb-3 border ${getCategoryStyle(article.category)}`}>
+                      {CATEGORY_LABELS[article.category] ?? article.category}
+                    </div>
+                    <h3 className="font-semibold text-white text-sm leading-snug mb-2 group-hover:text-emerald-300 transition-colors">{article.title}</h3>
+                    <p className="text-white/40 text-xs line-clamp-2">{article.summary}</p>
+                    <p className="text-white/25 text-xs mt-3">{article.readingTimeMinutes} min read</p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        </section>
+      )}
+
+      {/* CTA */}
+      <section className="py-24 relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(16,185,129,0.12)_0%,transparent_60%)] pointer-events-none" />
+        <div className="container mx-auto px-4 text-center relative z-10">
+          <motion.div initial="hidden" whileInView="show" viewport={{ once: true }} variants={containerVariants}>
+            <motion.h2 variants={itemVariants} className="text-4xl md:text-6xl font-bold text-white mb-6">
+              The Earth Needs You.
+            </motion.h2>
+            <motion.p variants={itemVariants} className="text-white/50 text-xl max-w-2xl mx-auto mb-10 leading-relaxed">
+              Share an idea. Report a problem. Plant a seed of change. Every action, no matter how small, is a vote for a better Earth.
+            </motion.p>
+            <motion.div variants={itemVariants} className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button asChild size="lg" className="bg-emerald-600 hover:bg-emerald-500 text-white border-0 h-14 px-10 text-base shadow-[0_0_30px_rgba(5,150,105,0.4)] hover:shadow-[0_0_50px_rgba(5,150,105,0.6)]">
+                <Link href="/ideas">Share Your Idea</Link>
+              </Button>
+              <Button asChild size="lg" variant="outline" className="border-white/20 text-white hover:bg-white/5 h-14 px-10 text-base">
+                <Link href="/articles">Start Learning</Link>
+              </Button>
+            </motion.div>
+          </motion.div>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function getCategoryStyle(category: string) {
+  const map: Record<string, string> = {
+    "clean-earth": "border-emerald-700/50 text-emerald-300 bg-emerald-900/30",
+    "animal-welfare": "border-amber-700/50 text-amber-300 bg-amber-900/30",
+    "forest": "border-green-700/50 text-green-300 bg-green-900/30",
+    "water": "border-blue-700/50 text-blue-300 bg-blue-900/30",
+    "technology": "border-indigo-700/50 text-indigo-300 bg-indigo-900/30",
+    "cities": "border-orange-700/50 text-orange-300 bg-orange-900/30",
+  };
+  return map[category] ?? "border-white/20 text-white/60 bg-white/5";
+}

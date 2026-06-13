@@ -1,10 +1,11 @@
-# [Project name]
+# Earth For All — धरती सबकी है
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+A large global mission website for environmental conservation, animal welfare, forest protection, and water conservation — with community ideas board, problem reporting, educational articles, and platform stats.
 
 ## Run & Operate
 
-- `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)
+- `pnpm --filter @workspace/api-server run dev` — run the API server (port 8080)
+- `pnpm --filter @workspace/earth-for-all run dev` — run the frontend (port assigned by workflow)
 - `pnpm run typecheck` — full typecheck across all packages
 - `pnpm run build` — typecheck + build all packages
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
@@ -14,6 +15,7 @@ _Replace the heading above with the project's name, and this line with one sente
 ## Stack
 
 - pnpm workspaces, Node.js 24, TypeScript 5.9
+- Frontend: React + Vite, Tailwind CSS, shadcn/ui, Framer Motion, Recharts, wouter routing
 - API: Express 5
 - DB: PostgreSQL + Drizzle ORM
 - Validation: Zod (`zod/v4`), `drizzle-zod`
@@ -22,15 +24,32 @@ _Replace the heading above with the project's name, and this line with one sente
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- `artifacts/earth-for-all/src/pages/` — all route pages (home, ideas, report, articles, clean-earth, animals, forest, water, technology)
+- `artifacts/earth-for-all/src/components/layout/` — Navbar, Footer, MainLayout
+- `artifacts/api-server/src/routes/` — all Express route handlers
+- `lib/db/src/schema.ts` — DB schema (ideas, reports, articles tables)
+- `lib/api-spec/openapi.yaml` — OpenAPI contract (source of truth)
+- `lib/api-client-react/src/generated/` — Orval-generated React Query hooks
+- `lib/api-zod/src/generated/` — Orval-generated Zod schemas
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- Contract-first API: OpenAPI spec → codegen → React Query hooks + Zod schemas. Never hand-write API calls.
+- Dark deep-earth theme: background `hsl(152 50% 4%)`, primary emerald, accent amber. CSS Google Fonts `@import url(...)` MUST be the very first line in `index.css` (before `@import "tailwindcss"`).
+- All routes handled by wouter with base path from `import.meta.env.BASE_URL`.
+- API and frontend served through the shared reverse proxy; API at `/api`, frontend at `/`.
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+- **Home** — hero, 6-cause grid, community stats + donut chart, recent ideas/reports/articles
+- **Clean Earth** — waste/plastic facts, solutions, actions
+- **Animals** — street animal problems, tech solutions, how to help
+- **Forest** — deforestation facts, reforestation solutions
+- **Water** — water scarcity data, conservation methods
+- **Technology** — AI & innovation for Earth
+- **Ideas Board** — submit and upvote community ideas, filterable by category
+- **Report** — submit environmental/animal problems with location and type
+- **Articles / Education Hub** — filterable knowledge base
 
 ## User preferences
 
@@ -38,7 +57,8 @@ _Populate as you build — explicit user instructions worth remembering across s
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+- CSS Google Fonts `@import url(...)` MUST be the very first line in `index.css` — if placed after `@import "tailwindcss"` PostCSS will throw an error.
+- Do NOT run `pnpm dev` at workspace root — use `restart_workflow` instead.
 
 ## Pointers
 

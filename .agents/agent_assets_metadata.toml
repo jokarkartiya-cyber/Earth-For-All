@@ -1,0 +1,38 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "SKbteCmp130Z1VZ9xU-eM"
+uri = "file://artifacts/earth-for-all/public/images/hero-earth.png"
+type = "image"
+title = "Epic planet earth from space"
+
+[[generated]]
+id = "zRtQaL2E5R_np6CE7pEec"
+uri = "file://artifacts/earth-for-all/public/images/forest-aerial.png"
+type = "image"
+title = "Lush green forest aerial view"
+
+[[generated]]
+id = "Xdl1RH2_Nb9oH49J5FWAY"
+uri = "file://artifacts/earth-for-all/public/images/tiger-wild.png"
+type = "image"
+title = "Majestic tiger in wild"
+
+[[generated]]
+id = "ffcqg1jRJceHjB30-xz7S"
+uri = "file://artifacts/earth-for-all/public/images/ocean-water.png"
+type = "image"
+title = "Crystal clear ocean water"
+
+[[generated]]
+id = "pMBoMrX87M_E1IaDD-6fH"
+uri = "file://artifacts/earth-for-all/public/images/future-city.png"
+type = "image"
+title = "Futuristic green city"
+
+[[generated]]
+id = "-mzXGVglP2BPl3K6DZz02"
+uri = "file://artifacts/earth-for-all/public/images/clean-earth.png"
+type = "image"
+title = "Clean earth recycling"
