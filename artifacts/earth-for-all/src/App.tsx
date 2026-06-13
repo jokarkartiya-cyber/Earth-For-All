@@ -16,6 +16,7 @@ import Ideas from "@/pages/ideas";
 import Report from "@/pages/report";
 import Articles from "@/pages/articles";
 import Resources from "@/pages/resources";
+import Platform from "@/pages/platform";
 
 const queryClient = new QueryClient();
 
@@ -33,6 +34,7 @@ function Router() {
         <Route path="/report" component={Report} />
         <Route path="/articles" component={Articles} />
         <Route path="/resources" component={Resources} />
+        <Route path="/platform" component={Platform} />
         <Route component={NotFound} />
       </Switch>
     </MainLayout>

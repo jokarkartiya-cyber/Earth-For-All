@@ -18,6 +18,8 @@ export interface PlatformStats {
   totalIdeas: number;
   totalReports: number;
   totalArticles: number;
+  totalDiscussions?: number;
+  totalSpecies?: number;
   ideasByCategory: CategoryCount[];
   reportsByType: CategoryCount[];
 }
@@ -77,6 +79,79 @@ export interface Article {
   createdAt: string;
 }
 
+export interface Discussion {
+  id: number;
+  topic: string;
+  message: string;
+  authorName: string;
+  category: string;
+  upvotes: number;
+  createdAt: string;
+}
+
+export interface DiscussionInput {
+  /** @minLength 5 */
+  topic: string;
+  /** @minLength 10 */
+  message: string;
+  authorName: string;
+  category: string;
+}
+
+export interface AirQuality {
+  id: number;
+  city: string;
+  country: string;
+  aqi: number;
+  /** @nullable */
+  pm25?: number | null;
+  /** @nullable */
+  pm10?: number | null;
+  /** @nullable */
+  no2?: number | null;
+  /** @nullable */
+  o3?: number | null;
+  /** Good | Moderate | Unhealthy | Very Unhealthy | Hazardous */
+  status: string;
+  updatedAt: string;
+}
+
+export interface AnimalSpecies {
+  id: number;
+  speciesName: string;
+  /** @nullable */
+  scientificName?: string | null;
+  /** Extinct | Critically Endangered | Endangered | Vulnerable | Near Threatened | Least Concern */
+  status: string;
+  /** @nullable */
+  habitat?: string | null;
+  /** @nullable */
+  population?: string | null;
+  /** @nullable */
+  threats?: string | null;
+  /** @nullable */
+  protectionMethods?: string | null;
+  /** @nullable */
+  country?: string | null;
+  /** @nullable */
+  imageUrl?: string | null;
+  createdAt: string;
+}
+
+export interface ForestData {
+  id: number;
+  country: string;
+  forestAreaMha: number;
+  /** @nullable */
+  forestLossMha?: number | null;
+  /** @nullable */
+  treeCanopyCover?: number | null;
+  year: number;
+  /** @nullable */
+  carbonStockMt?: number | null;
+  createdAt: string;
+}
+
 export type ListIdeasParams = {
 category?: string;
 limit?: number;
@@ -90,6 +165,25 @@ limit?: number;
 
 export type ListArticlesParams = {
 category?: string;
+limit?: number;
+};
+
+export type ListDiscussionsParams = {
+category?: string;
+limit?: number;
+};
+
+export type ListAirQualityParams = {
+country?: string;
+limit?: number;
+};
+
+export type ListSpeciesParams = {
+status?: string;
+limit?: number;
+};
+
+export type ListForestDataParams = {
 limit?: number;
 };
 

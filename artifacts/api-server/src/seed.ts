@@ -1,5 +1,5 @@
 import { db } from "@workspace/db";
-import { articlesTable, ideasTable, reportsTable } from "@workspace/db";
+import { articlesTable, ideasTable, reportsTable, discussionsTable, airQualityTable, animalSpeciesTable, forestDataTable } from "@workspace/db";
 
 const articles = [
   // === CLEAN EARTH (15 articles) ===
@@ -134,6 +134,75 @@ const reports = [
   { type: "garbage", description: "River bank पर marriage party का पूरा कचरा छोड़ा गया है — thermocol, plastic, food waste। River में जा रहा है। Organizer identify होना चाहिए।", location: "Sabarmati Riverfront, Ahmedabad", status: "pending", reporterName: "Ramesh Patel" },
 ];
 
+const discussions = [
+  { topic: "शहरों में solar panels अनिवार्य करना चाहिए?", message: "मेरा मानना है कि नए buildings पर solar panels लगाना mandatory होना चाहिए। Germany और Spain में यह already है। India में 300+ sunny days हैं — हम इसका फायदा क्यों नहीं उठाते? इससे both electricity और environment दोनों save होंगे।", authorName: "Rohan Sharma", category: "technology", upvotes: 47 },
+  { topic: "Plastic ban effective क्यों नहीं हो रहा India में?", message: "2022 से single-use plastic ban है, लेकिन आज भी shops में मिलता है। Problem enforcement में है। Local NGOs और citizens को इसे seriously लेना होगा। क्या solutions हो सकते हैं? Education? Fines? Alternatives?", authorName: "Priya Nair", category: "clean-earth", upvotes: 89 },
+  { topic: "Electric Vehicles vs Public Transport — क्या better है environment के लिए?", message: "हर कोई EV खरीदने की बात करता है, लेकिन क्या personally एक EV खरीदना उतना effective है जितना कि robust public transport system? Battery production में भी resources जाते हैं। आपका क्या view है?", authorName: "Arjun Mehta", category: "technology", upvotes: 134 },
+  { topic: "Miyawaki forests — क्या urban areas में काम करते हैं?", message: "मैंने Pune में एक Miyawaki forest visit किया — 3 साल में amazing results! 600 plants, insects वापस आए, birds वापस आए। क्या हमारे city में भी यह project शुरू हो सकता है? कौन साथ देगा?", authorName: "Sneha Kulkarni", category: "forest", upvotes: 73 },
+  { topic: "Street dogs problem का compassionate solution क्या है?", message: "Municipalities कुत्तों को मारती हैं जो न ethical है न effective। ABC (Animal Birth Control) program proven है — sterilization + vaccination से population control। लेकिन funding की कमी है। हम community level पर क्या कर सकते हैं?", authorName: "Deepa Krishnan", category: "animal-welfare", upvotes: 156 },
+  { topic: "Rainwater Harvesting — Mandatory होना चाहिए?", message: "Bangalore में groundwater 300 meters नीचे चला गया। RWH (Rainwater Harvesting) को mandatory करने से significant difference पड़ सकता है। कुछ states में यह है, कुछ में नहीं। National level policy क्यों नहीं है?", authorName: "Suresh Kumar", category: "water", upvotes: 92 },
+  { topic: "Air Quality monitoring — हर school में होना चाहिए", message: "बच्चे 6-8 घंटे school में रहते हैं जब AQI 400+ होता है। Parents को पता नहीं। अगर हर school में low-cost sensor लगे तो parents real-time decisions ले सकते हैं। ₹5000 में PurpleAir sensor मिलता है — school budget में afford होता है।", authorName: "Kavitha Rao", category: "clean-earth", upvotes: 211 },
+  { topic: "Coral reefs India में — कितने बचे हैं?", message: "India में Lakshadweep, Andaman और Gulf of Mannar में coral reefs हैं। Climate change से bleaching हो रहा है। Lakshadweep में 40% coral already dead है। Tourists और fishermen दोनों impact कर रहे हैं। Awareness बढ़ानी होगी।", authorName: "Marine Biologist Ananya", category: "water", upvotes: 68 },
+  { topic: "Climate anxiety — young generation में बढ़ रहा है", message: "Gen Z में climate anxiety real problem बन रही है। WHO reports increase in eco-grief। हमें सिर्फ problems नहीं बतानी — solutions और hope भी देनी है। Earth For All जैसे platforms इसी लिए important हैं।", authorName: "Psychology Student Riya", category: "clean-earth", upvotes: 178 },
+  { topic: "India में Organic farming कितनी scalable है?", message: "Sikkim 100% organic state है। क्या यह national level पर possible है? Transition period में yield drop होता है जो farmers afford नहीं कर सकते। Government support क्या होनी चाहिए? Subsidy? Insurance?", authorName: "Farmer Kiran Patil", category: "technology", upvotes: 45 },
+];
+
+const airQualityData = [
+  { city: "Delhi", country: "India", aqi: 312, pm25: 187.2, pm10: 298.5, no2: 45.3, o3: 28.1, status: "Hazardous" },
+  { city: "Lahore", country: "Pakistan", aqi: 289, pm25: 171.0, pm10: 245.2, no2: 52.1, o3: 18.4, status: "Hazardous" },
+  { city: "Dhaka", country: "Bangladesh", aqi: 268, pm25: 158.3, pm10: 234.1, no2: 41.2, o3: 22.0, status: "Hazardous" },
+  { city: "Kolkata", country: "India", aqi: 198, pm25: 112.4, pm10: 189.3, no2: 38.5, o3: 31.2, status: "Very Unhealthy" },
+  { city: "Beijing", country: "China", aqi: 176, pm25: 98.7, pm10: 165.4, no2: 64.3, o3: 42.1, status: "Unhealthy" },
+  { city: "Mumbai", country: "India", aqi: 164, pm25: 89.2, pm10: 142.8, no2: 35.4, o3: 28.9, status: "Unhealthy" },
+  { city: "Chennai", country: "India", aqi: 142, pm25: 75.6, pm10: 128.3, no2: 28.1, o3: 35.4, status: "Unhealthy" },
+  { city: "Hyderabad", country: "India", aqi: 118, pm25: 62.4, pm10: 108.7, no2: 24.5, o3: 38.2, status: "Unhealthy for Sensitive Groups" },
+  { city: "Bengaluru", country: "India", aqi: 98, pm25: 48.3, pm10: 88.1, no2: 21.3, o3: 41.5, status: "Moderate" },
+  { city: "Pune", country: "India", aqi: 87, pm25: 42.1, pm10: 78.6, no2: 18.4, o3: 43.2, status: "Moderate" },
+  { city: "London", country: "UK", aqi: 45, pm25: 12.4, pm10: 28.3, no2: 35.6, o3: 52.1, status: "Good" },
+  { city: "Paris", country: "France", aqi: 52, pm25: 14.8, pm10: 31.2, no2: 38.4, o3: 48.7, status: "Moderate" },
+  { city: "New York", country: "USA", aqi: 48, pm25: 11.2, pm10: 22.4, no2: 28.3, o3: 58.2, status: "Good" },
+  { city: "Sydney", country: "Australia", aqi: 28, pm25: 5.8, pm10: 14.2, no2: 12.1, o3: 38.4, status: "Good" },
+  { city: "Tokyo", country: "Japan", aqi: 55, pm25: 15.2, pm10: 34.1, no2: 42.3, o3: 61.4, status: "Moderate" },
+  { city: "Singapore", country: "Singapore", aqi: 42, pm25: 10.4, pm10: 23.5, no2: 18.6, o3: 44.2, status: "Good" },
+  { city: "Dubai", country: "UAE", aqi: 78, pm25: 28.4, pm10: 62.8, no2: 15.2, o3: 35.8, status: "Moderate" },
+  { city: "Nairobi", country: "Kenya", aqi: 67, pm25: 22.1, pm10: 48.3, no2: 12.4, o3: 32.1, status: "Moderate" },
+  { city: "São Paulo", country: "Brazil", aqi: 82, pm25: 34.6, pm10: 71.2, no2: 44.8, o3: 68.3, status: "Moderate" },
+  { city: "Jakarta", country: "Indonesia", aqi: 152, pm25: 82.3, pm10: 138.1, no2: 31.4, o3: 24.2, status: "Unhealthy" },
+];
+
+const animalSpeciesData = [
+  { speciesName: "Bengal Tiger", scientificName: "Panthera tigris tigris", status: "Endangered", habitat: "Tropical and subtropical moist broadleaf forests", population: "~3,000 in wild", threats: "Poaching, habitat loss, human-wildlife conflict", protectionMethods: "Project Tiger, national parks, anti-poaching units", country: "India" },
+  { speciesName: "Snow Leopard", scientificName: "Panthera uncia", status: "Vulnerable", habitat: "High mountain ranges of Central and South Asia", population: "~4,000-6,500", threats: "Poaching for fur and bones, habitat degradation, prey depletion", protectionMethods: "GSLEP (Global Snow Leopard Program), community conservation", country: "India/Nepal/China" },
+  { speciesName: "Asian Elephant", scientificName: "Elephas maximus", status: "Endangered", habitat: "Forests of South and Southeast Asia", population: "~40,000-50,000", threats: "Habitat loss, human-elephant conflict, ivory poaching", protectionMethods: "Project Elephant, wildlife corridors, community coexistence", country: "India/Sri Lanka/Thailand" },
+  { speciesName: "Indian One-Horned Rhinoceros", scientificName: "Rhinoceros unicornis", status: "Vulnerable", habitat: "Grasslands and forests of Nepal and India", population: "~3,700", threats: "Poaching for horn, habitat loss, flooding", protectionMethods: "Kaziranga National Park, armed guards, translocation programs", country: "India" },
+  { speciesName: "Gangetic River Dolphin", scientificName: "Platanista gangetica", status: "Endangered", habitat: "Ganges-Brahmaputra river system", population: "~3,000", threats: "River pollution, fishing nets, dam construction", protectionMethods: "National Aquatic Animal status, pollution control", country: "India/Bangladesh" },
+  { speciesName: "Indian Lion", scientificName: "Panthera leo persica", status: "Endangered", habitat: "Gir Forest, Gujarat", population: "~674 (only wild population)", threats: "Disease, single habitat dependence, human conflict", protectionMethods: "Gir National Park, disease monitoring, habitat expansion", country: "India" },
+  { speciesName: "Olive Ridley Sea Turtle", scientificName: "Lepidochelys olivacea", status: "Vulnerable", habitat: "Tropical and subtropical oceans", population: "Millions (but declining)", threats: "Fishing nets, beach development, plastic ingestion, poaching", protectionMethods: "Beach monitoring, fishing net modifications, nesting protection", country: "India/Global" },
+  { speciesName: "Vulture (White-rumped)", scientificName: "Gyps bengalensis", status: "Critically Endangered", habitat: "South and Southeast Asia", population: "~6,000 (99.9% decline from millions)", threats: "Diclofenac drug in cattle, lead poisoning", protectionMethods: "Diclofenac ban, vulture restaurants, captive breeding", country: "India" },
+  { speciesName: "African Elephant", scientificName: "Loxodonta africana", status: "Vulnerable", habitat: "Sub-Saharan Africa savannas and forests", population: "~415,000", threats: "Ivory poaching, habitat loss, human conflict", protectionMethods: "CITES ban, national parks, anti-poaching patrols", country: "Africa" },
+  { speciesName: "Amur Leopard", scientificName: "Panthera pardus orientalis", status: "Critically Endangered", habitat: "Russian Far East and China", population: "~100 in wild", threats: "Poaching, habitat loss, prey depletion", protectionMethods: "Land of the Leopard National Park, breeding programs", country: "Russia/China" },
+  { speciesName: "Vaquita Porpoise", scientificName: "Phocoena sinus", status: "Critically Endangered", habitat: "Northern Gulf of California", population: "~10 individuals", threats: "Bycatch in gillnets, illegal fishing", protectionMethods: "Fishing net ban, military patrols, captive refuge", country: "Mexico" },
+  { speciesName: "Javan Rhino", scientificName: "Rhinoceros sondaicus", status: "Critically Endangered", habitat: "Ujung Kulon National Park, Java", population: "~72", threats: "Invasive plant species, tsunamis, disease, inbreeding", protectionMethods: "Intense monitoring, habitat management, no captive population", country: "Indonesia" },
+];
+
+const forestDataEntries = [
+  { country: "Russia", forestAreaMha: 814.9, forestLossMha: 4.1, treeCanopyCover: 47.2, year: 2023, carbonStockMt: 246800 },
+  { country: "Brazil", forestAreaMha: 496.6, forestLossMha: 11.4, treeCanopyCover: 58.5, year: 2023, carbonStockMt: 148000 },
+  { country: "Canada", forestAreaMha: 346.9, forestLossMha: 2.1, treeCanopyCover: 34.1, year: 2023, carbonStockMt: 54100 },
+  { country: "USA", forestAreaMha: 309.8, forestLossMha: 4.8, treeCanopyCover: 33.9, year: 2023, carbonStockMt: 47100 },
+  { country: "China", forestAreaMha: 219.9, forestLossMha: 0.8, treeCanopyCover: 23.4, year: 2023, carbonStockMt: 46400 },
+  { country: "Australia", forestAreaMha: 134.0, forestLossMha: 5.3, treeCanopyCover: 17.4, year: 2023, carbonStockMt: 20900 },
+  { country: "Democratic Republic of Congo", forestAreaMha: 126.2, forestLossMha: 6.8, treeCanopyCover: 55.1, year: 2023, carbonStockMt: 47300 },
+  { country: "Indonesia", forestAreaMha: 92.1, forestLossMha: 3.6, treeCanopyCover: 50.5, year: 2023, carbonStockMt: 25600 },
+  { country: "Peru", forestAreaMha: 73.3, forestLossMha: 1.7, treeCanopyCover: 57.3, year: 2023, carbonStockMt: 24200 },
+  { country: "India", forestAreaMha: 72.6, forestLossMha: 0.2, treeCanopyCover: 24.6, year: 2023, carbonStockMt: 7083 },
+  { country: "Bolivia", forestAreaMha: 68.6, forestLossMha: 2.3, treeCanopyCover: 62.4, year: 2023, carbonStockMt: 19600 },
+  { country: "Mexico", forestAreaMha: 65.5, forestLossMha: 1.9, treeCanopyCover: 33.2, year: 2023, carbonStockMt: 11000 },
+  { country: "Colombia", forestAreaMha: 59.1, forestLossMha: 1.9, treeCanopyCover: 52.7, year: 2023, carbonStockMt: 15800 },
+  { country: "Angola", forestAreaMha: 53.6, forestLossMha: 0.5, treeCanopyCover: 43.7, year: 2023, carbonStockMt: 10400 },
+  { country: "Sudan/South Sudan", forestAreaMha: 42.5, forestLossMha: 0.8, treeCanopyCover: 17.2, year: 2023, carbonStockMt: 3800 },
+];
+
 async function seed() {
   console.log("🌍 Seeding Earth For All database...");
 
@@ -141,6 +210,10 @@ async function seed() {
   await db.delete(articlesTable);
   await db.delete(ideasTable);
   await db.delete(reportsTable);
+  await db.delete(discussionsTable);
+  await db.delete(airQualityTable);
+  await db.delete(animalSpeciesTable);
+  await db.delete(forestDataTable);
   console.log("✅ Cleared existing data");
 
   // Insert articles
@@ -160,6 +233,30 @@ async function seed() {
     await db.insert(reportsTable).values(report);
   }
   console.log(`✅ Inserted ${reports.length} reports`);
+
+  // Insert discussions
+  for (const d of discussions) {
+    await db.insert(discussionsTable).values(d);
+  }
+  console.log(`✅ Inserted ${discussions.length} discussions`);
+
+  // Insert air quality
+  for (const aq of airQualityData) {
+    await db.insert(airQualityTable).values(aq);
+  }
+  console.log(`✅ Inserted ${airQualityData.length} air quality records`);
+
+  // Insert animal species
+  for (const sp of animalSpeciesData) {
+    await db.insert(animalSpeciesTable).values(sp);
+  }
+  console.log(`✅ Inserted ${animalSpeciesData.length} animal species`);
+
+  // Insert forest data
+  for (const fd of forestDataEntries) {
+    await db.insert(forestDataTable).values(fd);
+  }
+  console.log(`✅ Inserted ${forestDataEntries.length} forest data entries`);
 
   console.log("🌱 Database seeded successfully!");
   process.exit(0);

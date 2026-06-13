@@ -20,13 +20,22 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  AirQuality,
+  AnimalSpecies,
   Article,
+  Discussion,
+  DiscussionInput,
+  ForestData,
   HealthStatus,
   Idea,
   IdeaInput,
+  ListAirQualityParams,
   ListArticlesParams,
+  ListDiscussionsParams,
+  ListForestDataParams,
   ListIdeasParams,
   ListReportsParams,
+  ListSpeciesParams,
   PlatformStats,
   Report,
   ReportInput
@@ -881,6 +890,483 @@ export function useGetRecentReports<TData = Awaited<ReturnType<typeof getRecentR
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetRecentReportsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getListDiscussionsUrl = (params?: ListDiscussionsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/discussions?${stringifiedParams}` : `/api/discussions`
+}
+
+/**
+ * @summary List community discussions
+ */
+export const listDiscussions = async (params?: ListDiscussionsParams, options?: RequestInit): Promise<Discussion[]> => {
+
+  return customFetch<Discussion[]>(getListDiscussionsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListDiscussionsQueryKey = (params?: ListDiscussionsParams,) => {
+    return [
+    `/api/discussions`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListDiscussionsQueryOptions = <TData = Awaited<ReturnType<typeof listDiscussions>>, TError = ErrorType<unknown>>(params?: ListDiscussionsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listDiscussions>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListDiscussionsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listDiscussions>>> = ({ signal }) => listDiscussions(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listDiscussions>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListDiscussionsQueryResult = NonNullable<Awaited<ReturnType<typeof listDiscussions>>>
+export type ListDiscussionsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List community discussions
+ */
+
+export function useListDiscussions<TData = Awaited<ReturnType<typeof listDiscussions>>, TError = ErrorType<unknown>>(
+ params?: ListDiscussionsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listDiscussions>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListDiscussionsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getCreateDiscussionUrl = () => {
+
+
+
+
+  return `/api/discussions`
+}
+
+/**
+ * @summary Post a new discussion
+ */
+export const createDiscussion = async (discussionInput: DiscussionInput, options?: RequestInit): Promise<Discussion> => {
+
+  return customFetch<Discussion>(getCreateDiscussionUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      discussionInput,)
+  }
+);}
+
+
+
+
+export const getCreateDiscussionMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createDiscussion>>, TError,{data: BodyType<DiscussionInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createDiscussion>>, TError,{data: BodyType<DiscussionInput>}, TContext> => {
+
+const mutationKey = ['createDiscussion'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createDiscussion>>, {data: BodyType<DiscussionInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createDiscussion(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateDiscussionMutationResult = NonNullable<Awaited<ReturnType<typeof createDiscussion>>>
+    export type CreateDiscussionMutationBody = BodyType<DiscussionInput>
+    export type CreateDiscussionMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Post a new discussion
+ */
+export const useCreateDiscussion = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createDiscussion>>, TError,{data: BodyType<DiscussionInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createDiscussion>>,
+        TError,
+        {data: BodyType<DiscussionInput>},
+        TContext
+      > => {
+      return useMutation(getCreateDiscussionMutationOptions(options));
+    }
+
+export const getUpvoteDiscussionUrl = (id: number,) => {
+
+
+
+
+  return `/api/discussions/${id}/upvote`
+}
+
+/**
+ * @summary Upvote a discussion
+ */
+export const upvoteDiscussion = async (id: number, options?: RequestInit): Promise<Discussion> => {
+
+  return customFetch<Discussion>(getUpvoteDiscussionUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getUpvoteDiscussionMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof upvoteDiscussion>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof upvoteDiscussion>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['upvoteDiscussion'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof upvoteDiscussion>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  upvoteDiscussion(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpvoteDiscussionMutationResult = NonNullable<Awaited<ReturnType<typeof upvoteDiscussion>>>
+
+    export type UpvoteDiscussionMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Upvote a discussion
+ */
+export const useUpvoteDiscussion = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof upvoteDiscussion>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof upvoteDiscussion>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getUpvoteDiscussionMutationOptions(options));
+    }
+
+export const getListAirQualityUrl = (params?: ListAirQualityParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/air-quality?${stringifiedParams}` : `/api/air-quality`
+}
+
+/**
+ * @summary List air quality data for cities
+ */
+export const listAirQuality = async (params?: ListAirQualityParams, options?: RequestInit): Promise<AirQuality[]> => {
+
+  return customFetch<AirQuality[]>(getListAirQualityUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListAirQualityQueryKey = (params?: ListAirQualityParams,) => {
+    return [
+    `/api/air-quality`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListAirQualityQueryOptions = <TData = Awaited<ReturnType<typeof listAirQuality>>, TError = ErrorType<unknown>>(params?: ListAirQualityParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAirQuality>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListAirQualityQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listAirQuality>>> = ({ signal }) => listAirQuality(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listAirQuality>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListAirQualityQueryResult = NonNullable<Awaited<ReturnType<typeof listAirQuality>>>
+export type ListAirQualityQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List air quality data for cities
+ */
+
+export function useListAirQuality<TData = Awaited<ReturnType<typeof listAirQuality>>, TError = ErrorType<unknown>>(
+ params?: ListAirQualityParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAirQuality>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListAirQualityQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getListSpeciesUrl = (params?: ListSpeciesParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/species?${stringifiedParams}` : `/api/species`
+}
+
+/**
+ * @summary List animal species
+ */
+export const listSpecies = async (params?: ListSpeciesParams, options?: RequestInit): Promise<AnimalSpecies[]> => {
+
+  return customFetch<AnimalSpecies[]>(getListSpeciesUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListSpeciesQueryKey = (params?: ListSpeciesParams,) => {
+    return [
+    `/api/species`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListSpeciesQueryOptions = <TData = Awaited<ReturnType<typeof listSpecies>>, TError = ErrorType<unknown>>(params?: ListSpeciesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listSpecies>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListSpeciesQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listSpecies>>> = ({ signal }) => listSpecies(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listSpecies>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListSpeciesQueryResult = NonNullable<Awaited<ReturnType<typeof listSpecies>>>
+export type ListSpeciesQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List animal species
+ */
+
+export function useListSpecies<TData = Awaited<ReturnType<typeof listSpecies>>, TError = ErrorType<unknown>>(
+ params?: ListSpeciesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listSpecies>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListSpeciesQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getListForestDataUrl = (params?: ListForestDataParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/forest-data?${stringifiedParams}` : `/api/forest-data`
+}
+
+/**
+ * @summary List forest data by country
+ */
+export const listForestData = async (params?: ListForestDataParams, options?: RequestInit): Promise<ForestData[]> => {
+
+  return customFetch<ForestData[]>(getListForestDataUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListForestDataQueryKey = (params?: ListForestDataParams,) => {
+    return [
+    `/api/forest-data`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListForestDataQueryOptions = <TData = Awaited<ReturnType<typeof listForestData>>, TError = ErrorType<unknown>>(params?: ListForestDataParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listForestData>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListForestDataQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listForestData>>> = ({ signal }) => listForestData(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listForestData>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListForestDataQueryResult = NonNullable<Awaited<ReturnType<typeof listForestData>>>
+export type ListForestDataQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List forest data by country
+ */
+
+export function useListForestData<TData = Awaited<ReturnType<typeof listForestData>>, TError = ErrorType<unknown>>(
+ params?: ListForestDataParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listForestData>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListForestDataQueryOptions(params,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

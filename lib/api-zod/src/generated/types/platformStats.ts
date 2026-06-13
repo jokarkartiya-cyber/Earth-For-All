@@ -11,6 +11,8 @@ export interface PlatformStats {
   totalIdeas: number;
   totalReports: number;
   totalArticles: number;
+  totalDiscussions?: number;
+  totalSpecies?: number;
   ideasByCategory: CategoryCount[];
   reportsByType: CategoryCount[];
 }

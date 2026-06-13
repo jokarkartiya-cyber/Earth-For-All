@@ -23,6 +23,8 @@ export const GetStatsResponse = zod.object({
   "totalIdeas": zod.number(),
   "totalReports": zod.number(),
   "totalArticles": zod.number(),
+  "totalDiscussions": zod.number().optional(),
+  "totalSpecies": zod.number().optional(),
   "ideasByCategory": zod.array(zod.object({
   "category": zod.string(),
   "count": zod.number()
@@ -199,5 +201,135 @@ export const GetRecentReportsResponseItem = zod.object({
   "createdAt": zod.coerce.date()
 })
 export const GetRecentReportsResponse = zod.array(GetRecentReportsResponseItem)
+
+
+/**
+ * @summary List community discussions
+ */
+export const listDiscussionsQueryLimitDefault = 20;
+
+export const ListDiscussionsQueryParams = zod.object({
+  "category": zod.coerce.string().optional(),
+  "limit": zod.coerce.number().default(listDiscussionsQueryLimitDefault)
+})
+
+export const ListDiscussionsResponseItem = zod.object({
+  "id": zod.number(),
+  "topic": zod.string(),
+  "message": zod.string(),
+  "authorName": zod.string(),
+  "category": zod.string(),
+  "upvotes": zod.number(),
+  "createdAt": zod.coerce.date()
+})
+export const ListDiscussionsResponse = zod.array(ListDiscussionsResponseItem)
+
+
+/**
+ * @summary Post a new discussion
+ */
+export const createDiscussionBodyTopicMin = 5;
+
+export const createDiscussionBodyMessageMin = 10;
+
+
+
+export const CreateDiscussionBody = zod.object({
+  "topic": zod.string().min(createDiscussionBodyTopicMin),
+  "message": zod.string().min(createDiscussionBodyMessageMin),
+  "authorName": zod.string(),
+  "category": zod.string()
+})
+
+
+/**
+ * @summary Upvote a discussion
+ */
+export const UpvoteDiscussionParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpvoteDiscussionResponse = zod.object({
+  "id": zod.number(),
+  "topic": zod.string(),
+  "message": zod.string(),
+  "authorName": zod.string(),
+  "category": zod.string(),
+  "upvotes": zod.number(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary List air quality data for cities
+ */
+export const listAirQualityQueryLimitDefault = 50;
+
+export const ListAirQualityQueryParams = zod.object({
+  "country": zod.coerce.string().optional(),
+  "limit": zod.coerce.number().default(listAirQualityQueryLimitDefault)
+})
+
+export const ListAirQualityResponseItem = zod.object({
+  "id": zod.number(),
+  "city": zod.string(),
+  "country": zod.string(),
+  "aqi": zod.number(),
+  "pm25": zod.number().nullish(),
+  "pm10": zod.number().nullish(),
+  "no2": zod.number().nullish(),
+  "o3": zod.number().nullish(),
+  "status": zod.string().describe('Good | Moderate | Unhealthy | Very Unhealthy | Hazardous'),
+  "updatedAt": zod.coerce.date()
+})
+export const ListAirQualityResponse = zod.array(ListAirQualityResponseItem)
+
+
+/**
+ * @summary List animal species
+ */
+export const listSpeciesQueryLimitDefault = 30;
+
+export const ListSpeciesQueryParams = zod.object({
+  "status": zod.coerce.string().optional(),
+  "limit": zod.coerce.number().default(listSpeciesQueryLimitDefault)
+})
+
+export const ListSpeciesResponseItem = zod.object({
+  "id": zod.number(),
+  "speciesName": zod.string(),
+  "scientificName": zod.string().nullish(),
+  "status": zod.string().describe('Extinct | Critically Endangered | Endangered | Vulnerable | Near Threatened | Least Concern'),
+  "habitat": zod.string().nullish(),
+  "population": zod.string().nullish(),
+  "threats": zod.string().nullish(),
+  "protectionMethods": zod.string().nullish(),
+  "country": zod.string().nullish(),
+  "imageUrl": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+})
+export const ListSpeciesResponse = zod.array(ListSpeciesResponseItem)
+
+
+/**
+ * @summary List forest data by country
+ */
+export const listForestDataQueryLimitDefault = 30;
+
+export const ListForestDataQueryParams = zod.object({
+  "limit": zod.coerce.number().default(listForestDataQueryLimitDefault)
+})
+
+export const ListForestDataResponseItem = zod.object({
+  "id": zod.number(),
+  "country": zod.string(),
+  "forestAreaMha": zod.number(),
+  "forestLossMha": zod.number().nullish(),
+  "treeCanopyCover": zod.number().nullish(),
+  "year": zod.number(),
+  "carbonStockMt": zod.number().nullish(),
+  "createdAt": zod.coerce.date()
+})
+export const ListForestDataResponse = zod.array(ListForestDataResponseItem)
 
 

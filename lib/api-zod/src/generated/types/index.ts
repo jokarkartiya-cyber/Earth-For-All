@@ -6,14 +6,23 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './airQuality';
+export * from './animalSpecies';
 export * from './article';
 export * from './categoryCount';
+export * from './discussion';
+export * from './discussionInput';
+export * from './forestData';
 export * from './healthStatus';
 export * from './idea';
 export * from './ideaInput';
+export * from './listAirQualityParams';
 export * from './listArticlesParams';
+export * from './listDiscussionsParams';
+export * from './listForestDataParams';
 export * from './listIdeasParams';
 export * from './listReportsParams';
+export * from './listSpeciesParams';
 export * from './platformStats';
 export * from './report';
 export * from './reportInput';

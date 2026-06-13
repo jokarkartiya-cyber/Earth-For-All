@@ -18,6 +18,14 @@ tags:
     description: Educational articles
   - name: stats
     description: Platform statistics
+  - name: discussions
+    description: Community discussions
+  - name: air-quality
+    description: Air quality data
+  - name: species
+    description: Animal species database
+  - name: forest
+    description: Forest data
 paths:
   /healthz:
     get:
@@ -228,6 +236,138 @@ paths:
                 items:
                   $ref: "#/components/schemas/Report"
 
+  /discussions:
+    get:
+      operationId: listDiscussions
+      tags: [discussions]
+      summary: List community discussions
+      parameters:
+        - in: query
+          name: category
+          schema:
+            type: string
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: List of discussions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Discussion"
+    post:
+      operationId: createDiscussion
+      tags: [discussions]
+      summary: Post a new discussion
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DiscussionInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Discussion"
+
+  /discussions/{id}/upvote:
+    post:
+      operationId: upvoteDiscussion
+      tags: [discussions]
+      summary: Upvote a discussion
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Updated discussion
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Discussion"
+
+  /air-quality:
+    get:
+      operationId: listAirQuality
+      tags: [air-quality]
+      summary: List air quality data for cities
+      parameters:
+        - in: query
+          name: country
+          schema:
+            type: string
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 50
+      responses:
+        "200":
+          description: Air quality data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AirQuality"
+
+  /species:
+    get:
+      operationId: listSpecies
+      tags: [species]
+      summary: List animal species
+      parameters:
+        - in: query
+          name: status
+          schema:
+            type: string
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 30
+      responses:
+        "200":
+          description: Animal species list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AnimalSpecies"
+
+  /forest-data:
+    get:
+      operationId: listForestData
+      tags: [forest]
+      summary: List forest data by country
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 30
+      responses:
+        "200":
+          description: Forest data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ForestData"
+
 components:
   schemas:
     HealthStatus:
@@ -247,6 +387,10 @@ components:
         totalReports:
           type: integer
         totalArticles:
+          type: integer
+        totalDiscussions:
+          type: integer
+        totalSpecies:
           type: integer
         ideasByCategory:
           type: array
@@ -357,6 +501,119 @@ components:
           type: integer
         imageUrl:
           type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+
+    Discussion:
+      type: object
+      required: [id, topic, message, authorName, category, upvotes, createdAt]
+      properties:
+        id:
+          type: integer
+        topic:
+          type: string
+        message:
+          type: string
+        authorName:
+          type: string
+        category:
+          type: string
+        upvotes:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+
+    DiscussionInput:
+      type: object
+      required: [topic, message, authorName, category]
+      properties:
+        topic:
+          type: string
+          minLength: 5
+        message:
+          type: string
+          minLength: 10
+        authorName:
+          type: string
+        category:
+          type: string
+
+    AirQuality:
+      type: object
+      required: [id, city, country, aqi, status, updatedAt]
+      properties:
+        id:
+          type: integer
+        city:
+          type: string
+        country:
+          type: string
+        aqi:
+          type: integer
+        pm25:
+          type: ["number", "null"]
+        pm10:
+          type: ["number", "null"]
+        no2:
+          type: ["number", "null"]
+        o3:
+          type: ["number", "null"]
+        status:
+          type: string
+          description: "Good | Moderate | Unhealthy | Very Unhealthy | Hazardous"
+        updatedAt:
+          type: string
+          format: date-time
+
+    AnimalSpecies:
+      type: object
+      required: [id, speciesName, status, createdAt]
+      properties:
+        id:
+          type: integer
+        speciesName:
+          type: string
+        scientificName:
+          type: ["string", "null"]
+        status:
+          type: string
+          description: "Extinct | Critically Endangered | Endangered | Vulnerable | Near Threatened | Least Concern"
+        habitat:
+          type: ["string", "null"]
+        population:
+          type: ["string", "null"]
+        threats:
+          type: ["string", "null"]
+        protectionMethods:
+          type: ["string", "null"]
+        country:
+          type: ["string", "null"]
+        imageUrl:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+
+    ForestData:
+      type: object
+      required: [id, country, forestAreaMha, year, createdAt]
+      properties:
+        id:
+          type: integer
+        country:
+          type: string
+        forestAreaMha:
+          type: number
+        forestLossMha:
+          type: ["number", "null"]
+        treeCanopyCover:
+          type: ["number", "null"]
+        year:
+          type: integer
+        carbonStockMt:
+          type: ["number", "null"]
         createdAt:
           type: string
           format: date-time
