@@ -17,6 +17,11 @@ import Report from "@/pages/report";
 import Articles from "@/pages/articles";
 import Resources from "@/pages/resources";
 import Platform from "@/pages/platform";
+import Evidence from "@/pages/evidence";
+import LiveEarth from "@/pages/live-earth";
+import SolutionBank from "@/pages/solution-bank";
+import MemoryProject from "@/pages/memory-project";
+import Library from "@/pages/library";
 
 const queryClient = new QueryClient();
 
@@ -35,6 +40,11 @@ function Router() {
         <Route path="/articles" component={Articles} />
         <Route path="/resources" component={Resources} />
         <Route path="/platform" component={Platform} />
+        <Route path="/evidence" component={Evidence} />
+        <Route path="/live-earth" component={LiveEarth} />
+        <Route path="/solution-bank" component={SolutionBank} />
+        <Route path="/memory-project" component={MemoryProject} />
+        <Route path="/library" component={Library} />
         <Route component={NotFound} />
       </Switch>
     </MainLayout>
