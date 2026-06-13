@@ -1,0 +1,244 @@
+PART 1: Satellite APIs, Live Maps & Open Data Sources
+🌍 Earth & Satellite Maps
+Google Earth Engine
+Use: Satellite Data Analysis, Forest, Water, Climate Research
+Google Maps Platform APIs
+Use: Interactive Maps, Location, Places
+NASA EarthData API
+Use: Satellite Images, Climate, Atmosphere Data
+NASA Worldview
+Use: Daily Earth Satellite Images
+Copernicus Data Space Ecosystem
+Use: Sentinel Satellite Images, Land & Ocean Data
+USGS EarthExplorer
+Use: Landsat Satellite Data
+🌳 Forest & Biodiversity Data
+Global Forest Watch API
+Use: Forest Loss, Tree Cover, Fire Alerts
+GBIF (Global Biodiversity Information Facility) API
+Use: Animals, Plants, Species Database
+IUCN Red List API
+Use: Threatened Species Information
+🌡️ Weather, Air & Climate APIs
+OpenWeather API
+Use: Weather, Temperature, Rain Data
+NOAA Climate Data API
+Use: Historical Climate Records
+OpenAQ API
+Use: Air Quality Data
+IQAir Air Quality Map
+Use: Global Pollution Map
+🌊 Ocean & Water Data
+NOAA Ocean Data Portal
+UNESCO Ocean Data Portal
+Aqueduct Water Risk Atlas (WRI) API/Data
+🔥 Disaster Monitoring
+NASA FIRMS Fire Map API
+Use: Wildfire Detection
+ReliefWeb API
+Use: Global Disaster Reports
+EM-DAT Disaster Database
+Use: Historical Disaster Data
+🧠 AI & Earth Data
+Hugging Face Models API
+TensorFlow Hub
+OpenAI API Platform
+Use: Earth AI Assistant, Translation, Analysis
+📱 PART 2: Complete Earth For All Website Database Structure
+👤 1. Users System
+users
+id
+name
+email
+password_hash
+country
+city
+language
+role
+profile_photo
+bio
+created_at
+user_activities
+id
+user_id
+activity_type
+points
+description
+date
+🌍 2. Earth Problems Database
+problems
+id
+title
+category
+country
+location
+description
+images
+videos
+severity
+created_by
+created_at
+solutions
+id
+problem_id
+solution_title
+solution_description
+cost
+difficulty_level
+scientific_reference
+created_at
+🐾 3. Animal Protection System
+animals
+id
+species_name
+scientific_name
+status
+habitat
+population
+threats
+protection_methods
+rescue_reports
+id
+animal_id
+location
+description
+photo
+status
+created_at
+♻️ 4. Waste & Recycling Innovation
+waste_types
+id
+type_name
+recycle_methods
+products_made
+inventions
+id
+title
+description
+materials_used
+inventor
+images
+📚 5. Earth Library
+books
+id
+title
+author
+category
+language
+source_link
+summary
+research_papers
+id
+title
+authors
+journal
+year
+doi
+link
+summary
+courses
+id
+name
+provider
+level
+duration
+link
+🛰️ 6. Satellite & Live Data
+satellite_sources
+id
+name
+api_link
+data_type
+update_frequency
+license
+earth_observations
+id
+source_id
+location
+data_type
+value
+date
+🏥 7. Health & Human Welfare
+health_reports
+id
+country
+disease
+pollution_relation
+report_link
+year
+🌱 8. Environment Data
+forests
+id
+country
+forest_area
+forest_loss
+year
+water_sources
+id
+name
+location
+quality_status
+last_checked
+air_quality
+id
+city
+aqi
+pollutants
+date
+🤖 9. AI Earth Assistant
+ai_conversations
+id
+user_id
+question
+answer
+language
+date
+🌎 10. Global Community
+projects
+id
+title
+country
+description
+goal
+progress
+images
+volunteers
+id
+user_id
+skills
+availability
+location
+discussions
+id
+user_id
+topic
+message
+created_at
+🏆 11. Earth Challenge & Rewards
+challenges
+id
+title
+description
+points
+duration
+achievements
+id
+user_id
+challenge_id
+completion_date
+🔐 12. Security & Management
+admins
+id
+name
+email
+role
+reports
+id
+report_type
+status
+created_at
+logs
+id
+action
+user_id
+timestamp

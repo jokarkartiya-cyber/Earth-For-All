@@ -1,0 +1,55 @@
+1. Global Earth Map, Climate & Environment Data
+Google Earth – पृथ्वी के 3D Maps और Satellite Images
+NASA Earth Observatory – पृथ्वी में होने वाले बदलावों की Images और Reports
+NASA Earth Data – Satellite Data और Climate Information
+Copernicus Earth Observation Programme – Europe का Satellite Earth Monitoring System
+Global Forest Watch – Forest Loss और Tree Cover Data
+Our World in Data – Environment – Global Environment Statistics
+🐾 2. Animal Protection & Biodiversity
+IUCN Red List – खतरे में मौजूद जीवों की जानकारी
+World Wildlife Fund (WWF) – Wildlife Conservation
+National Geographic Animals – Animals Knowledge
+eBird by Cornell Lab – Birds Data और Bird Tracking
+Animal Diversity Web – Animals Database
+♻️ 3. Plastic Recycling & Waste Innovation
+Precious Plastic Community – Plastic Recycling Machines और Ideas
+Ellen MacArthur Foundation – Circular Economy – Waste-Free Economy Ideas
+UNEP Plastic Pollution Resources – Plastic Pollution Information
+Earth911 Recycling Directory – Recycling Information
+🧪 4. Science, Research & Innovation
+Google Scholar – Research Papers Search
+PubMed – Medical Research Papers
+ResearchGate – Researchers और Publications
+arXiv – Free Scientific Papers
+Directory of Open Access Journals (DOAJ) – Free Research Journals
+📚 5. Free Earth University & Education
+MIT OpenCourseWare
+Harvard Online Learning
+Stanford Online
+Coursera
+edX
+Khan Academy
+🌊 6. Ocean, Water & Climate
+NOAA Ocean & Climate
+UNESCO Ocean Science
+World Resources Institute – Water Data
+IPCC Reports
+🤖 7. AI, Technology & Open Source
+OpenAI Research
+GitHub Open Source Projects
+Hugging Face AI Models
+TensorFlow AI Resources
+🏥 8. Health, Human Welfare & Public Data
+World Health Organization (WHO)
+Centers for Disease Control and Prevention (CDC)
+World Bank Open Data
+UN Data
+🌱 9. Agriculture, Soil & Food Security
+Food and Agriculture Organization (FAO)
+CGIAR Global Agricultural Research
+USDA Agricultural Research Service
+🌎 10. Community, Volunteers & Global Action
+United Nations Volunteers (UNV)
+Earth Day Network
+Citizen Science Association
+Zooniverse Citizen Science Projects
