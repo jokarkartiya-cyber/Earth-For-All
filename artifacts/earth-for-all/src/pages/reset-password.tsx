@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { Globe, Lock, Eye, EyeOff } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Lock, Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 
 export default function ResetPassword() {
@@ -31,14 +30,18 @@ export default function ResetPassword() {
 
   if (done) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background px-4 text-center">
-        <div>
-          <div className="w-14 h-14 rounded-full bg-emerald-900/30 border border-emerald-700/40 flex items-center justify-center mx-auto mb-4">
-            <Globe className="w-7 h-7 text-emerald-400" />
+      <div className="min-h-screen flex items-center justify-center bg-background px-4">
+        <div className="w-full max-w-[400px]">
+          <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-8 shadow-2xl text-center">
+            <div className="w-14 h-14 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-5">
+              <svg className="w-6 h-6 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            </div>
+            <h1 className="text-xl font-semibold text-white mb-2">Password reset!</h1>
+            <p className="text-white/50 text-sm mb-6">Your password has been updated successfully.</p>
+            <Link href="/login" className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-medium px-6 py-2.5 rounded-xl text-sm transition-all">
+              Sign in with new password
+            </Link>
           </div>
-          <h1 className="text-2xl font-bold text-white mb-2">Password reset!</h1>
-          <p className="text-white/50 text-sm mb-6">Your password has been updated successfully.</p>
-          <Link href="/login" className="text-emerald-400 hover:text-emerald-300 underline text-sm">Sign in with new password</Link>
         </div>
       </div>
     );
@@ -46,14 +49,16 @@ export default function ResetPassword() {
 
   if (!oobCode || mode !== "resetPassword") {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background px-4 text-center">
-        <div>
-          <div className="w-14 h-14 rounded-full bg-amber-900/30 border border-amber-700/40 flex items-center justify-center mx-auto mb-4">
-            <Lock className="w-7 h-7 text-amber-400" />
+      <div className="min-h-screen flex items-center justify-center bg-background px-4">
+        <div className="w-full max-w-[400px]">
+          <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-8 shadow-2xl text-center">
+            <div className="w-14 h-14 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mx-auto mb-5">
+              <Lock className="w-6 h-6 text-amber-400" />
+            </div>
+            <h1 className="text-xl font-semibold text-white mb-2">Invalid reset link</h1>
+            <p className="text-white/50 text-sm mb-6">Use the link from your password reset email.</p>
+            <Link href="/forgot-password" className="text-emerald-400 hover:text-emerald-300 font-medium text-sm transition-colors">Request a new reset link</Link>
           </div>
-          <h1 className="text-2xl font-bold text-white mb-2">Invalid reset link</h1>
-          <p className="text-white/50 text-sm mb-6">Use the link from your password reset email.</p>
-          <Link href="/forgot-password" className="text-emerald-400 hover:text-emerald-300 underline text-sm">Request a new reset link</Link>
         </div>
       </div>
     );
@@ -61,36 +66,44 @@ export default function ResetPassword() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4 py-12">
-      <div className="w-full max-w-sm">
-        <div className="text-center mb-8">
-          <div className="w-14 h-14 rounded-full bg-emerald-900/30 border border-emerald-700/40 flex items-center justify-center mx-auto mb-4">
-            <Globe className="w-7 h-7 text-emerald-400" />
+      <div className="w-full max-w-[400px]">
+        <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-8 shadow-2xl">
+          <div className="text-center mb-8">
+            <div className="w-12 h-12 rounded-full bg-emerald-600/20 border border-emerald-500/30 flex items-center justify-center mx-auto mb-5 shadow-lg shadow-emerald-500/10">
+              <Lock className="w-6 h-6 text-emerald-400" />
+            </div>
+            <h1 className="text-xl font-semibold text-white">New password</h1>
+            <p className="text-white/40 text-sm mt-1.5">Enter your new password below</p>
           </div>
-          <h1 className="text-2xl font-bold text-white">New password</h1>
-          <p className="text-white/50 text-sm mt-1">Enter your new password below</p>
-        </div>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="text-xs text-white/60 font-medium mb-1.5 block">New password</label>
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+              <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/30">
+                <Lock className="w-4 h-4" />
+              </div>
               <input type={showPw ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)} required minLength={6}
-                className="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 pl-10 pr-10 text-white text-sm placeholder:text-white/25 focus:outline-none focus:border-emerald-500/50 transition-colors"
-                placeholder="••••••••" />
-              <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60">
+                className="w-full bg-transparent border border-white/10 rounded-xl py-3 pl-10 pr-10 text-white text-sm placeholder:text-white/20 outline-none transition-all duration-200 focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20"
+                placeholder="New password" />
+              <button type="button" onClick={() => setShowPw(!showPw)}
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors">
                 {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
-          </div>
-          <div>
-            <label className="text-xs text-white/60 font-medium mb-1.5 block">Confirm password</label>
-            <input type="password" value={confirm} onChange={e => setConfirm(e.target.value)} required minLength={6}
-              className="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 px-4 text-white text-sm placeholder:text-white/25 focus:outline-none focus:border-emerald-500/50 transition-colors"
-              placeholder="••••••••" />
-          </div>
-          {error && <p className="text-red-400 text-xs text-center">{error}</p>}
-          <Button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-500 text-white h-11 rounded-xl text-sm">Reset password</Button>
-        </form>
+            <div className="relative">
+              <input type="password" value={confirm} onChange={e => setConfirm(e.target.value)} required minLength={6}
+                className="w-full bg-transparent border border-white/10 rounded-xl py-3 px-4 text-white text-sm placeholder:text-white/20 outline-none transition-all duration-200 focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20"
+                placeholder="Confirm new password" />
+            </div>
+            {error && (
+              <div className="bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-2.5">
+                <p className="text-red-400 text-xs text-center">{error}</p>
+              </div>
+            )}
+            <button type="submit"
+              className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium h-11 rounded-xl text-sm transition-all duration-200 hover:shadow-lg hover:shadow-emerald-500/25">
+              Reset password
+            </button>
+          </form>
+        </div>
       </div>
     </div>
   );
