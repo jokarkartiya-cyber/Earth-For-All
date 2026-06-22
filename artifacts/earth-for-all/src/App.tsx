@@ -24,6 +24,9 @@ import MemoryProject from "@/pages/memory-project";
 import Library from "@/pages/library";
 import Login from "@/pages/login";
 import Register from "@/pages/register";
+import ForgotPassword from "@/pages/forgot-password";
+import ResetPassword from "@/pages/reset-password";
+import Profile from "@/pages/profile";
 
 const queryClient = new QueryClient();
 
@@ -36,6 +39,8 @@ function App() {
             <Switch>
               <Route path="/login" component={Login} />
               <Route path="/register" component={Register} />
+              <Route path="/forgot-password" component={ForgotPassword} />
+              <Route path="/reset-password" component={ResetPassword} />
               <Route>
                 <ProtectedRoute>
                   <MainLayout>
@@ -56,6 +61,7 @@ function App() {
                       <Route path="/solution-bank" component={SolutionBank} />
                       <Route path="/memory-project" component={MemoryProject} />
                       <Route path="/library" component={Library} />
+                      <Route path="/profile" component={Profile} />
                       <Route component={NotFound} />
                     </Switch>
                   </MainLayout>

@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { AnimatePresence, motion, useScroll, useTransform } from "framer-motion";
-import { Menu, X, Globe, Droplets, TreePine, Bird, Zap, Lightbulb, AlertTriangle, BookOpen, Database, LayoutDashboard, ChevronDown, FlaskConical, Satellite, Landmark, Library, Brain, Sprout, LogIn, LogOut, User } from "lucide-react";
+import { Menu, X, Globe, Droplets, TreePine, Bird, Zap, Lightbulb, AlertTriangle, BookOpen, Database, LayoutDashboard, ChevronDown, FlaskConical, Satellite, Landmark, Library, Brain, Sprout, LogOut, User } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
@@ -162,6 +162,11 @@ export function Navbar() {
                       className="absolute right-0 top-full mt-2 w-48 bg-[#060e09]/95 backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden shadow-2xl z-50">
                       <div className="p-1.5">
                         <div className="px-3 py-2 text-xs text-white/40 border-b border-white/5 mb-1">{user.email}</div>
+                        <Link href="/profile"
+                          className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-white/70 hover:text-white hover:bg-white/5 transition-all"
+                          onClick={() => setIsUserOpen(false)}>
+                          <User className="w-3.5 h-3.5" /> Profile
+                        </Link>
                         <button onClick={() => { logout(); setIsUserOpen(false); }}
                           className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-red-400 hover:bg-white/5 transition-all">
                           <LogOut className="w-3.5 h-3.5" /> Sign out
@@ -255,6 +260,10 @@ export function Navbar() {
                       <div className="text-xs text-white/40">{user.email}</div>
                     </div>
                   </div>
+                  <Link href="/profile" onClick={() => setIsMobileMenuOpen(false)}
+                    className="flex items-center gap-2 text-xs text-white/60 hover:text-white mb-2 transition-colors">
+                    <User className="w-3.5 h-3.5" /> Profile
+                  </Link>
                   <button onClick={() => { logout(); setIsMobileMenuOpen(false); }}
                     className="flex items-center gap-2 text-xs text-red-400 hover:text-red-300 transition-colors">
                     <LogOut className="w-3.5 h-3.5" /> Sign out
