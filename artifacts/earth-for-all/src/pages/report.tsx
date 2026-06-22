@@ -1,21 +1,10 @@
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { AlertTriangle, MapPin } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Badge } from "@/components/ui/badge";
-import {
-  useListReports,
-  useCreateReport,
-  getListReportsQueryKey,
-  getGetRecentReportsQueryKey,
-} from "@workspace/api-client-react";
-import { useQueryClient } from "@tanstack/react-query";
+import { AlertTriangle, MapPin, MessageSquare } from "lucide-react";
+import { collection, query, orderBy, onSnapshot, addDoc, serverTimestamp } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { useAuth } from "@/hooks/use-auth";
+import { CommentSection } from "@/components/CommentSection";
 
 const TYPES = [
   { value: "pollution", label: "Air / Smoke Pollution" },
@@ -25,49 +14,58 @@ const TYPES = [
   { value: "water-pollution", label: "Water Pollution" },
 ];
 
+const TYPE_LABELS: Record<string, string> = { pollution: "Pollution", "animal-emergency": "Animal Emergency", "tree-cutting": "Tree Cutting", "water-pollution": "Water Pollution", garbage: "Garbage" };
+
 const STATUS_STYLE: Record<string, string> = {
   pending: "bg-yellow-900/40 text-yellow-300 border-yellow-700/50",
   "in-progress": "bg-blue-900/40 text-blue-300 border-blue-700/50",
   resolved: "bg-emerald-900/40 text-emerald-300 border-emerald-700/50",
 };
 
-const TYPE_LABELS: Record<string, string> = {
-  pollution: "Pollution",
-  "animal-emergency": "Animal Emergency",
-  "tree-cutting": "Tree Cutting",
-  "water-pollution": "Water Pollution",
-  garbage: "Garbage",
-};
-
-const reportSchema = z.object({
-  type: z.string().min(1, "Select a report type"),
-  description: z.string().min(10, "Please provide more detail"),
-  location: z.string().min(3, "Please provide a location"),
-  reporterName: z.string().optional(),
-});
-type ReportForm = z.infer<typeof reportSchema>;
+interface Report {
+  id: string;
+  type: string;
+  description: string;
+  location: string;
+  reporterName: string;
+  userId: string;
+  status: string;
+  createdAt: any;
+}
 
 export default function Report() {
-  const queryClient = useQueryClient();
-  const { data: reports, isLoading } = useListReports({ limit: 30 }, { query: { queryKey: getListReportsQueryKey({ limit: 30 }) } });
+  const { user } = useAuth();
+  const [reports, setReports] = useState<Report[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [type, setType] = useState("");
+  const [description, setDescription] = useState("");
+  const [location, setLocation] = useState("");
+  const [error, setError] = useState("");
 
-  const createReport = useCreateReport({
-    mutation: {
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: getListReportsQueryKey() });
-        queryClient.invalidateQueries({ queryKey: getGetRecentReportsQueryKey() });
-        form.reset();
-      },
-    },
-  });
+  useEffect(() => {
+    const q = query(collection(db, "reports"), orderBy("createdAt", "desc"));
+    const unsub = onSnapshot(q, (snap) => {
+      setReports(snap.docs.map((d) => ({ id: d.id, ...d.data() } as Report)));
+      setLoading(false);
+    });
+    return unsub;
+  }, []);
 
-  const form = useForm<ReportForm>({
-    resolver: zodResolver(reportSchema),
-    defaultValues: { type: "", description: "", location: "", reporterName: "" },
-  });
-
-  function onSubmit(data: ReportForm) {
-    createReport.mutate({ data });
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!user) return;
+    if (!type || description.length < 10 || location.length < 3) {
+      setError("Type, description (10+ chars), and location required");
+      return;
+    }
+    await addDoc(collection(db, "reports"), {
+      type, description, location,
+      reporterName: user.name,
+      userId: user.id,
+      status: "pending",
+      createdAt: serverTimestamp(),
+    });
+    setType(""); setDescription(""); setLocation(""); setError("");
   }
 
   const containerVariants = {
@@ -96,96 +94,70 @@ export default function Report() {
 
       <div className="container mx-auto px-4 mt-10">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-          {/* Form */}
           <div>
             <h2 className="text-xl font-bold text-white mb-6">Submit a Report</h2>
-            <div className="bg-white/[0.04] border border-white/10 rounded-2xl p-8">
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
-                  <FormField control={form.control} name="type" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-white/70">Report Type</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger data-testid="select-report-type" className="bg-white/5 border-white/10 text-white">
-                            <SelectValue placeholder="What are you reporting?" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent className="bg-card border-white/10">
-                          {TYPES.map((t) => (
-                            <SelectItem key={t.value} value={t.value} className="text-white/80 focus:bg-white/10 focus:text-white">{t.label}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                  <FormField control={form.control} name="description" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-white/70">Describe the Problem</FormLabel>
-                      <FormControl>
-                        <Textarea data-testid="input-report-description" placeholder="What did you see? Be specific — it helps authorities respond faster." className="bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-red-500/50 min-h-[120px]" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                  <FormField control={form.control} name="location" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-white/70">Location</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <MapPin className="absolute left-3 top-3 w-4 h-4 text-white/30" />
-                          <Input data-testid="input-report-location" placeholder="Street, neighborhood, city..." className="bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-red-500/50 pl-10" {...field} />
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                  <FormField control={form.control} name="reporterName" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-white/70">Your Name (optional)</FormLabel>
-                      <FormControl>
-                        <Input data-testid="input-report-name" placeholder="Anonymous by default" className="bg-white/5 border-white/10 text-white placeholder:text-white/30" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                  <Button data-testid="button-report-submit" type="submit" className="w-full bg-red-700 hover:bg-red-600 text-white border-0 h-12" disabled={createReport.isPending}>
-                    {createReport.isPending ? "Submitting..." : "Submit Report"}
-                  </Button>
-                  {createReport.isSuccess && (
-                    <p className="text-emerald-400 text-sm text-center">Report submitted. Thank you for speaking up.</p>
-                  )}
+            <div className="bg-[#0a1a14] border border-white/10 rounded-2xl p-8">
+              {user ? (
+                <form onSubmit={handleSubmit} className="space-y-5">
+                  <div>
+                    <label className="text-xs text-white/60 font-medium mb-1.5 block">Report Type</label>
+                    <select value={type} onChange={e => setType(e.target.value)} required
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm outline-none focus:border-red-500/50 transition-colors">
+                      <option value="" disabled className="text-white/30">What are you reporting?</option>
+                      {TYPES.map((t) => <option key={t.value} value={t.value} className="text-white">{t.label}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-xs text-white/60 font-medium mb-1.5 block">Description</label>
+                    <textarea value={description} onChange={e => setDescription(e.target.value)} required
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder:text-white/20 outline-none focus:border-red-500/50 transition-colors min-h-[120px]"
+                      placeholder="What did you see? Be specific — it helps authorities respond faster." />
+                  </div>
+                  <div>
+                    <label className="text-xs text-white/60 font-medium mb-1.5 block">Location</label>
+                    <div className="relative">
+                      <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+                      <input type="text" value={location} onChange={e => setLocation(e.target.value)} required
+                        className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white text-sm placeholder:text-white/20 outline-none focus:border-red-500/50 transition-colors"
+                        placeholder="Street, neighborhood, city..." />
+                    </div>
+                  </div>
+                  {error && <p className="text-red-400 text-xs">{error}</p>}
+                  <button type="submit" className="w-full bg-red-700 hover:bg-red-600 text-white font-medium h-12 rounded-xl text-sm transition-all">
+                    Submit Report
+                  </button>
                 </form>
-              </Form>
+              ) : (
+                <p className="text-white/40 text-sm text-center py-8">Sign in to submit a report.</p>
+              )}
             </div>
           </div>
 
-          {/* Reports list */}
           <div>
             <h2 className="text-xl font-bold text-white mb-6">Recent Reports</h2>
-            {isLoading ? (
+            {loading ? (
               <div className="space-y-4">
                 {Array.from({ length: 5 }).map((_, i) => <div key={i} className="bg-white/[0.03] border border-white/10 rounded-xl p-5 animate-pulse h-24" />)}
               </div>
-            ) : Array.isArray(reports) && reports.length > 0 ? (
+            ) : reports.length > 0 ? (
               <motion.div initial="hidden" animate="show" variants={containerVariants} className="space-y-4">
                 {reports.map((report) => (
-                  <motion.div key={report.id} variants={itemVariants} data-testid={`report-card-${report.id}`}
+                  <motion.div key={report.id} variants={itemVariants}
                     className="bg-white/[0.03] border border-white/10 rounded-xl p-5 hover:bg-white/[0.05] transition-all">
                     <div className="flex items-start justify-between gap-3 mb-2">
-                      <Badge variant="outline" className="text-xs border-red-800/50 text-red-300 bg-red-900/20 shrink-0">
+                      <span className="text-xs border border-red-800/50 text-red-300 bg-red-900/20 px-2.5 py-1 rounded-full font-medium">
                         {TYPE_LABELS[report.type] ?? report.type}
-                      </Badge>
+                      </span>
                       <span className={`text-xs px-2.5 py-1 rounded-full border ${STATUS_STYLE[report.status] ?? "bg-white/10 text-white/50 border-white/20"}`}>
                         {report.status}
                       </span>
                     </div>
                     <p className="text-white/70 text-sm line-clamp-2 mb-2">{report.description}</p>
                     <div className="flex items-center gap-1.5 text-white/30 text-xs">
-                      <MapPin className="w-3 h-3" />
-                      {report.location}
+                      <MapPin className="w-3 h-3" /> {report.location}
+                      <span className="ml-auto text-white/20 text-[11px]">{report.reporterName}</span>
                     </div>
+                    <CommentSection itemId={report.id} itemType="report" />
                   </motion.div>
                 ))}
               </motion.div>

@@ -1,29 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Lightbulb, TrendingUp, Plus, ChevronUp } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import {
-  useListIdeas,
-  useCreateIdea,
-  useUpvoteIdea,
-  getListIdeasQueryKey,
-  getGetRecentIdeasQueryKey,
-} from "@workspace/api-client-react";
-import { useQueryClient } from "@tanstack/react-query";
+import { Lightbulb, Plus, ChevronUp, MessageSquare } from "lucide-react";
+import { collection, query, orderBy, onSnapshot, addDoc, updateDoc, doc, increment, serverTimestamp } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { useAuth } from "@/hooks/use-auth";
+import { CommentSection } from "@/components/CommentSection";
 
 const CATEGORIES = [
   { value: "clean-earth", label: "Clean Earth" },
@@ -43,52 +24,60 @@ const CATEGORY_STYLE: Record<string, string> = {
   "cities": "border-orange-700/50 text-orange-300 bg-orange-900/30",
 };
 
-const ideaSchema = z.object({
-  title: z.string().min(5, "Title must be at least 5 characters"),
-  description: z.string().min(10, "Description must be at least 10 characters"),
-  category: z.string().min(1, "Please select a category"),
-  authorName: z.string().min(2, "Name must be at least 2 characters"),
-});
-
-type IdeaForm = z.infer<typeof ideaSchema>;
+interface Idea {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  authorName: string;
+  userId: string;
+  upvotes: number;
+  createdAt: any;
+}
 
 export default function Ideas() {
+  const { user } = useAuth();
   const [activeCategory, setActiveCategory] = useState<string | undefined>(undefined);
   const [showForm, setShowForm] = useState(false);
-  const queryClient = useQueryClient();
+  const [ideas, setIdeas] = useState<Idea[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [category, setCategory] = useState("");
+  const [error, setError] = useState("");
 
-  const { data: ideas, isLoading } = useListIdeas(
-    activeCategory ? { category: activeCategory, limit: 50 } : { limit: 50 },
-    { query: { queryKey: getListIdeasQueryKey(activeCategory ? { category: activeCategory, limit: 50 } : { limit: 50 }) } }
-  );
+  useEffect(() => {
+    const q = query(collection(db, "ideas"), orderBy("createdAt", "desc"));
+    const unsub = onSnapshot(q, (snap) => {
+      setIdeas(snap.docs.map((d) => ({ id: d.id, ...d.data() } as Idea)));
+      setLoading(false);
+    });
+    return unsub;
+  }, []);
 
-  const createIdea = useCreateIdea({
-    mutation: {
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: getListIdeasQueryKey() });
-        queryClient.invalidateQueries({ queryKey: getGetRecentIdeasQueryKey() });
-        form.reset();
-        setShowForm(false);
-      },
-    },
-  });
-
-  const upvote = useUpvoteIdea({
-    mutation: {
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: getListIdeasQueryKey() });
-      },
-    },
-  });
-
-  const form = useForm<IdeaForm>({
-    resolver: zodResolver(ideaSchema),
-    defaultValues: { title: "", description: "", category: "", authorName: "" },
-  });
-
-  function onSubmit(data: IdeaForm) {
-    createIdea.mutate({ data });
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!user) return;
+    if (title.length < 5 || description.length < 10 || !category) {
+      setError("Title (5+ chars), description (10+ chars), and category required");
+      return;
+    }
+    await addDoc(collection(db, "ideas"), {
+      title, description, category,
+      authorName: user.name,
+      userId: user.id,
+      upvotes: 0,
+      createdAt: serverTimestamp(),
+    });
+    setTitle(""); setDescription(""); setCategory(""); setShowForm(false); setError("");
   }
+
+  async function handleUpvote(id: string) {
+    await updateDoc(doc(db, "ideas", id), { upvotes: increment(1) });
+  }
+
+  const filtered = activeCategory ? ideas.filter((i) => i.category === activeCategory) : ideas;
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -101,7 +90,6 @@ export default function Ideas() {
 
   return (
     <div className="pt-24 pb-16 min-h-screen">
-      {/* Header */}
       <div className="relative overflow-hidden bg-[radial-gradient(ellipse_at_top,rgba(245,158,11,0.1)_0%,transparent_50%)] py-16">
         <div className="container mx-auto px-4 text-center">
           <div className="flex items-center justify-center gap-3 mb-4">
@@ -112,136 +100,89 @@ export default function Ideas() {
           <p className="text-white/50 text-lg max-w-xl mx-auto mb-8">
             Share your vision for a better Earth. Every idea, however small, can spark a revolution.
           </p>
-          <Button
-            data-testid="button-submit-idea"
-            onClick={() => setShowForm(!showForm)}
-            className="bg-amber-600 hover:bg-amber-500 text-white border-0 h-12 px-8"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Submit Your Idea
-          </Button>
+          {user && (
+            <button onClick={() => setShowForm(!showForm)}
+              className="bg-amber-600 hover:bg-amber-500 text-white h-12 px-8 rounded-xl font-medium transition-all inline-flex items-center gap-2">
+              <Plus className="w-4 h-4" /> Submit Your Idea
+            </button>
+          )}
         </div>
       </div>
 
       <div className="container mx-auto px-4 mt-8">
-        {/* Submit Form */}
         {showForm && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="bg-white/[0.04] border border-white/10 rounded-2xl p-8 mb-10 max-w-2xl mx-auto"
-          >
-            <h2 className="text-xl font-bold text-white mb-6">Share Your Idea</h2>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
-                <FormField control={form.control} name="title" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-white/70">Idea Title</FormLabel>
-                    <FormControl>
-                      <Input data-testid="input-idea-title" placeholder="e.g. Solar-powered animal water stations" className="bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-amber-500/50" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-                <FormField control={form.control} name="description" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-white/70">Describe Your Idea</FormLabel>
-                    <FormControl>
-                      <Textarea data-testid="input-idea-description" placeholder="Explain how this idea would help..." className="bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-amber-500/50 min-h-[100px]" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField control={form.control} name="category" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-white/70">Category</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger data-testid="select-idea-category" className="bg-white/5 border-white/10 text-white">
-                            <SelectValue placeholder="Select category" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent className="bg-card border-white/10">
-                          {CATEGORIES.map((c) => (
-                            <SelectItem key={c.value} value={c.value} className="text-white/80 focus:bg-white/10 focus:text-white">{c.label}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                  <FormField control={form.control} name="authorName" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-white/70">Your Name</FormLabel>
-                      <FormControl>
-                        <Input data-testid="input-idea-author" placeholder="Your name" className="bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-amber-500/50" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                </div>
-                <div className="flex gap-3">
-                  <Button data-testid="button-idea-submit" type="submit" className="bg-amber-600 hover:bg-amber-500 text-white border-0" disabled={createIdea.isPending}>
-                    {createIdea.isPending ? "Submitting..." : "Submit Idea"}
-                  </Button>
-                  <Button type="button" variant="ghost" className="text-white/50 hover:text-white" onClick={() => setShowForm(false)}>Cancel</Button>
-                </div>
-              </form>
-            </Form>
+          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}
+            className="bg-[#0a1a14] border border-white/10 rounded-2xl p-8 mb-10 max-w-2xl mx-auto">
+            <h2 className="text-lg font-semibold text-white mb-6">Share Your Idea</h2>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="text-xs text-white/60 font-medium mb-1.5 block">Idea Title</label>
+                <input type="text" value={title} onChange={e => setTitle(e.target.value)} required
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder:text-white/20 outline-none focus:border-amber-500/50 transition-colors"
+                  placeholder="e.g. Solar-powered animal water stations" />
+              </div>
+              <div>
+                <label className="text-xs text-white/60 font-medium mb-1.5 block">Description</label>
+                <textarea value={description} onChange={e => setDescription(e.target.value)} required
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder:text-white/20 outline-none focus:border-amber-500/50 transition-colors min-h-[100px]"
+                  placeholder="Explain how this idea would help..." />
+              </div>
+              <div>
+                <label className="text-xs text-white/60 font-medium mb-1.5 block">Category</label>
+                <select value={category} onChange={e => setCategory(e.target.value)} required
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm outline-none focus:border-amber-500/50 transition-colors">
+                  <option value="" disabled className="text-white/30">Select a category</option>
+                  {CATEGORIES.map((c) => <option key={c.value} value={c.value} className="text-white">{c.label}</option>)}
+                </select>
+              </div>
+              {error && <p className="text-red-400 text-xs">{error}</p>}
+              <div className="flex gap-3">
+                <button type="submit" className="bg-amber-600 hover:bg-amber-500 text-white font-medium px-6 py-2.5 rounded-xl text-sm transition-all">Submit Idea</button>
+                <button type="button" onClick={() => setShowForm(false)} className="text-white/50 hover:text-white px-4 py-2.5 text-sm">Cancel</button>
+              </div>
+            </form>
           </motion.div>
         )}
 
-        {/* Category filter */}
         <div className="flex flex-wrap gap-3 mb-8">
-          <button
-            data-testid="filter-all"
-            onClick={() => setActiveCategory(undefined)}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-all border ${!activeCategory ? "bg-white/15 text-white border-white/30" : "border-white/10 text-white/50 hover:text-white hover:border-white/20"}`}
-          >
-            All
-          </button>
+          <button onClick={() => setActiveCategory(undefined)}
+            className={`px-4 py-2 rounded-full text-sm font-medium transition-all border ${!activeCategory ? "bg-white/15 text-white border-white/30" : "border-white/10 text-white/50 hover:text-white hover:border-white/20"}`}>All</button>
           {CATEGORIES.map((c) => (
-            <button
-              key={c.value}
-              data-testid={`filter-${c.value}`}
-              onClick={() => setActiveCategory(c.value === activeCategory ? undefined : c.value)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-all border ${activeCategory === c.value ? "bg-white/15 text-white border-white/30" : "border-white/10 text-white/50 hover:text-white hover:border-white/20"}`}
-            >
-              {c.label}
-            </button>
+            <button key={c.value} onClick={() => setActiveCategory(c.value === activeCategory ? undefined : c.value)}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-all border ${activeCategory === c.value ? "bg-white/15 text-white border-white/30" : "border-white/10 text-white/50 hover:text-white hover:border-white/20"}`}>{c.label}</button>
           ))}
         </div>
 
-        {/* Ideas Grid */}
-        {isLoading ? (
+        {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="bg-white/[0.03] border border-white/10 rounded-2xl p-6 animate-pulse h-44" />
-            ))}
+            {Array.from({ length: 6 }).map((_, i) => <div key={i} className="bg-white/[0.03] border border-white/10 rounded-2xl p-6 animate-pulse h-44" />)}
           </div>
-        ) : Array.isArray(ideas) && ideas.length > 0 ? (
+        ) : filtered.length > 0 ? (
           <motion.div initial="hidden" animate="show" variants={containerVariants} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {ideas.map((idea) => (
-              <motion.div key={idea.id} variants={itemVariants} data-testid={`idea-card-${idea.id}`}
+            {filtered.map((idea) => (
+              <motion.div key={idea.id} variants={itemVariants}
                 className="bg-white/[0.03] border border-white/10 rounded-2xl p-6 hover:bg-white/[0.06] hover:border-white/20 transition-all duration-300 group flex flex-col">
                 <div className={`inline-block self-start text-xs font-semibold px-2.5 py-1 rounded-full mb-4 border ${CATEGORY_STYLE[idea.category] ?? "border-white/20 text-white/60 bg-white/5"}`}>
                   {CATEGORIES.find((c) => c.value === idea.category)?.label ?? idea.category}
                 </div>
-                <h3 className="font-semibold text-white text-sm leading-snug mb-2 group-hover:text-amber-300 transition-colors flex-1">{idea.title}</h3>
-                <p className="text-white/40 text-xs leading-relaxed line-clamp-3">{idea.description}</p>
-                <div className="mt-5 flex items-center justify-between">
-                  <span className="text-white/30 text-xs">{idea.authorName}</span>
-                  <button
-                    data-testid={`button-upvote-${idea.id}`}
-                    onClick={() => upvote.mutate({ id: idea.id })}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-emerald-800/50 text-emerald-400 hover:bg-emerald-900/30 transition-all text-xs font-semibold"
-                  >
-                    <ChevronUp className="w-3.5 h-3.5" />
-                    {idea.upvotes}
+                <h3 className="font-semibold text-white text-sm leading-snug mb-2 group-hover:text-amber-300 transition-colors">{idea.title}</h3>
+                <p className={`text-white/40 text-xs leading-relaxed ${expandedId !== idea.id ? "line-clamp-3" : ""}`}>{idea.description}</p>
+                {idea.description.length > 150 && (
+                  <button onClick={() => setExpandedId(expandedId === idea.id ? null : idea.id)} className="text-[11px] text-amber-400/60 hover:text-amber-300 mt-1 text-left">
+                    {expandedId === idea.id ? "Show less" : "Read more"}
                   </button>
+                )}
+                <div className="mt-4 flex items-center justify-between">
+                  <span className="text-white/30 text-xs">{idea.authorName}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-white/20 text-xs flex items-center gap-1"><MessageSquare className="w-3 h-3" /> 0</span>
+                    <button onClick={() => handleUpvote(idea.id)}
+                      className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-emerald-800/50 text-emerald-400 hover:bg-emerald-900/30 transition-all text-xs font-semibold">
+                      <ChevronUp className="w-3.5 h-3.5" /> {idea.upvotes}
+                    </button>
+                  </div>
                 </div>
+                <CommentSection itemId={idea.id} itemType="idea" />
               </motion.div>
             ))}
           </motion.div>
