@@ -168,7 +168,7 @@ export default function Report() {
               <div className="space-y-4">
                 {Array.from({ length: 5 }).map((_, i) => <div key={i} className="bg-white/[0.03] border border-white/10 rounded-xl p-5 animate-pulse h-24" />)}
               </div>
-            ) : reports && reports.length > 0 ? (
+            ) : Array.isArray(reports) && reports.length > 0 ? (
               <motion.div initial="hidden" animate="show" variants={containerVariants} className="space-y-4">
                 {reports.map((report) => (
                   <motion.div key={report.id} variants={itemVariants} data-testid={`report-card-${report.id}`}

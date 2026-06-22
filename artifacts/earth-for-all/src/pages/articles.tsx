@@ -89,7 +89,7 @@ export default function Articles() {
               <div key={i} className="bg-white/[0.03] border border-white/10 rounded-2xl overflow-hidden animate-pulse h-64" />
             ))}
           </div>
-        ) : articles && articles.length > 0 ? (
+        ) : Array.isArray(articles) && articles.length > 0 ? (
           <motion.div initial="hidden" animate="show" variants={containerVariants} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {articles.map((article) => (
               <motion.div key={article.id} variants={itemVariants} data-testid={`article-card-${article.id}`}

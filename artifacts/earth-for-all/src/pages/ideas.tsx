@@ -221,7 +221,7 @@ export default function Ideas() {
               <div key={i} className="bg-white/[0.03] border border-white/10 rounded-2xl p-6 animate-pulse h-44" />
             ))}
           </div>
-        ) : ideas && ideas.length > 0 ? (
+        ) : Array.isArray(ideas) && ideas.length > 0 ? (
           <motion.div initial="hidden" animate="show" variants={containerVariants} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {ideas.map((idea) => (
               <motion.div key={idea.id} variants={itemVariants} data-testid={`idea-card-${idea.id}`}

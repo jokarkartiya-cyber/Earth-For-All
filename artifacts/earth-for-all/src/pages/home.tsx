@@ -94,10 +94,10 @@ export default function Home() {
   const { data: recentReports } = useGetRecentReports();
   const { data: articles } = useListArticles({ limit: 3 });
 
-  const chartData = stats?.ideasByCategory?.map((c) => ({
+  const chartData = Array.isArray(stats?.ideasByCategory) ? stats.ideasByCategory.map((c) => ({
     name: CATEGORY_LABELS[c.category] ?? c.category,
     value: c.count,
-  })) ?? [];
+  })) : [];
 
   return (
     <div className="flex flex-col">
@@ -337,7 +337,7 @@ export default function Home() {
       )}
 
       {/* ── RECENT IDEAS ── */}
-      {recentIdeas && recentIdeas.length > 0 && (
+      {Array.isArray(recentIdeas) && recentIdeas.length > 0 && (
         <section className="py-24 container mx-auto px-4">
           <motion.div initial="hidden" whileInView="show" viewport={{ once: true }} variants={cv}>
             <motion.div variants={iv} className="flex items-center justify-between mb-12">
@@ -375,7 +375,7 @@ export default function Home() {
       )}
 
       {/* ── RECENT REPORTS ── */}
-      {recentReports && recentReports.length > 0 && (
+      {Array.isArray(recentReports) && recentReports.length > 0 && (
         <section className="py-16 bg-white/[0.02] border-y border-white/5">
           <div className="container mx-auto px-4">
             <motion.div initial="hidden" whileInView="show" viewport={{ once: true }} variants={cv}>
@@ -416,7 +416,7 @@ export default function Home() {
       )}
 
       {/* ── RECENT ARTICLES ── */}
-      {articles && articles.length > 0 && (
+      {Array.isArray(articles) && articles.length > 0 && (
         <section className="py-24 container mx-auto px-4">
           <motion.div initial="hidden" whileInView="show" viewport={{ once: true }} variants={cv}>
             <motion.div variants={iv} className="flex items-center justify-between mb-12">

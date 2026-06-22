@@ -52,8 +52,8 @@ export default function LiveEarth() {
   const { data: airQuality, isLoading: aqLoading } = useListAirQuality({ country: undefined, limit: 20 });
   const { data: forestData, isLoading: forestLoading } = useListForestData({ limit: 15 });
 
-  const aqChartData = airQuality?.slice(0, 12).map(d => ({ name: d.city, aqi: d.aqi, status: d.status })) ?? [];
-  const forestChartData = forestData?.slice(0, 10).map(d => ({ name: d.country, area: Math.round(d.forestAreaMha), loss: d.forestLossMha ? Math.round(d.forestLossMha * 10) / 10 : 0 })) ?? [];
+  const aqChartData = Array.isArray(airQuality) ? airQuality.slice(0, 12).map(d => ({ name: d.city, aqi: d.aqi, status: d.status })) : [];
+  const forestChartData = Array.isArray(forestData) ? forestData.slice(0, 10).map(d => ({ name: d.country, area: Math.round(d.forestAreaMha), loss: d.forestLossMha ? Math.round(d.forestLossMha * 10) / 10 : 0 })) : [];
 
   return (
     <div className="pt-24 pb-16 min-h-screen">
@@ -151,7 +151,7 @@ export default function LiveEarth() {
                   </div>
                   {/* City Cards */}
                   <div className="mt-5 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-                    {airQuality?.slice(0, 12).map(aq => (
+                    {Array.isArray(airQuality) && airQuality.slice(0, 12).map(aq => (
                       <div key={aq.id} className="bg-white/[0.03] border border-white/8 rounded-xl p-2.5 text-center">
                         <div className="text-xs text-white/50 mb-1">{aq.city}</div>
                         <div className="text-xl font-bold font-mono" style={{ color: AQI_COLOR(aq.aqi) }}>{aq.aqi}</div>
@@ -196,7 +196,7 @@ export default function LiveEarth() {
                     </ResponsiveContainer>
                   </div>
                   <div className="mt-5 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
-                    {forestData?.slice(0, 10).map(fd => (
+                    {Array.isArray(forestData) && forestData.slice(0, 10).map(fd => (
                       <div key={fd.id} className="bg-white/[0.03] border border-white/8 rounded-xl p-2.5 text-center">
                         <div className="text-[10px] text-white/40 mb-1 truncate">{fd.country}</div>
                         <div className="text-base font-bold text-green-400">{fd.forestAreaMha}M</div>
