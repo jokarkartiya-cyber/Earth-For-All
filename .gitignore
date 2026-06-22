@@ -48,3 +48,6 @@ Thumbs.db
 .cache/
 .local/
 .replit-artifact/
+
+# env
+.env
