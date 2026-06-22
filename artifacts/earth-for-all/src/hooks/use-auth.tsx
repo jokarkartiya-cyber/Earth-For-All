@@ -8,10 +8,7 @@ import {
   sendPasswordResetEmail,
   confirmPasswordReset,
   updateProfile as firebaseUpdateProfile,
-  RecaptchaVerifier,
-  signInWithPhoneNumber,
   type User as FirebaseUser,
-  type ConfirmationResult,
 } from "firebase/auth";
 import { doc, getDoc, setDoc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db, googleProvider } from "@/lib/firebase";
@@ -31,8 +28,6 @@ interface AuthContextType {
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   loginWithGoogle: () => Promise<void>;
-  loginWithPhone: (phone: string, recaptchaContainerId: string) => Promise<ConfirmationResult>;
-  verifyPhoneOtp: (confirmationResult: ConfirmationResult, otp: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   forgotPassword: (email: string) => Promise<void>;
@@ -84,16 +79,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await signInWithPopup(auth, googleProvider);
   }, []);
 
-  const loginWithPhone = useCallback(async (phone: string, recaptchaContainerId: string): Promise<ConfirmationResult> => {
-    const recaptcha = new RecaptchaVerifier(auth, recaptchaContainerId, { size: "invisible" });
-    const confirmation = await signInWithPhoneNumber(auth, phone, recaptcha);
-    return confirmation;
-  }, []);
-
-  const verifyPhoneOtp = useCallback(async (confirmationResult: ConfirmationResult, otp: string) => {
-    await confirmationResult.confirm(otp);
-  }, []);
-
   const register = useCallback(async (name: string, email: string, password: string) => {
     const cred = await createUserWithEmailAndPassword(auth, email, password);
     await firebaseUpdateProfile(cred.user, { displayName: name });
@@ -130,7 +115,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, loginWithGoogle, loginWithPhone, verifyPhoneOtp, register, logout, forgotPassword, resetPassword, updateProfile: updateProfileCb }}>
+    <AuthContext.Provider value={{ user, loading, login, loginWithGoogle, register, logout, forgotPassword, resetPassword, updateProfile: updateProfileCb }}>
       {children}
     </AuthContext.Provider>
   );
