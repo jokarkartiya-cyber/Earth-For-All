@@ -1,120 +1,124 @@
-import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
+import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react";
+import {
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signInWithPopup,
+  signOut,
+  sendPasswordResetEmail,
+  confirmPasswordReset,
+  updateProfile as firebaseUpdateProfile,
+  type User as FirebaseUser,
+} from "firebase/auth";
+import { doc, getDoc, setDoc, updateDoc, serverTimestamp } from "firebase/firestore";
+import { auth, db, googleProvider, githubProvider } from "@/lib/firebase";
 
-export interface User {
+export interface UserProfile {
   id: string;
   name: string;
   email: string;
   avatar?: string;
-  provider?: "email" | "google" | "github";
+  provider?: string;
   joinedAt?: string;
 }
 
 interface AuthContextType {
-  user: User | null;
+  user: UserProfile | null;
+  loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   loginWithGoogle: () => Promise<void>;
   loginWithGitHub: () => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   forgotPassword: (email: string) => Promise<void>;
-  resetPassword: (email: string, newPassword: string) => void;
-  updateProfile: (data: { name?: string; email?: string }) => void;
+  resetPassword: (oobCode: string, newPassword: string) => Promise<void>;
+  updateProfile: (data: { name?: string }) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-function getStoredUser(): User | null {
-  try {
-    const raw = localStorage.getItem("earth_user");
-    return raw ? JSON.parse(raw) : null;
-  } catch { return null; }
-}
-
-function getStoredUsers(): Record<string, { name: string; password: string; provider?: string }> {
-  try {
-    const raw = localStorage.getItem("earth_users");
-    return raw ? JSON.parse(raw) : {};
-  } catch { return {}; }
-}
-
-function saveUser(u: User) {
-  localStorage.setItem("earth_user", JSON.stringify(u));
+async function firebaseUserToProfile(fbUser: FirebaseUser): Promise<UserProfile> {
+  const profileRef = doc(db, "profiles", fbUser.uid);
+  const profileSnap = await getDoc(profileRef);
+  if (profileSnap.exists()) {
+    return profileSnap.data() as UserProfile;
+  }
+  return {
+    id: fbUser.uid,
+    name: fbUser.displayName || fbUser.email?.split("@")[0] || "User",
+    email: fbUser.email || "",
+    avatar: fbUser.photoURL || undefined,
+    provider: fbUser.providerData[0]?.providerId || "email",
+    joinedAt: fbUser.metadata.creationTime || new Date().toISOString(),
+  };
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(getStoredUser);
+  const [user, setUser] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, async (fbUser) => {
+      if (fbUser) {
+        const profile = await firebaseUserToProfile(fbUser);
+        setUser(profile);
+      } else {
+        setUser(null);
+      }
+      setLoading(false);
+    });
+    return unsub;
+  }, []);
 
   const login = useCallback(async (email: string, password: string) => {
-    const users = getStoredUsers();
-    const found = users[email];
-    if (!found || found.password !== password) throw new Error("Invalid email or password");
-    const u: User = { id: email, name: found.name, email, provider: "email" };
-    saveUser(u); setUser(u);
+    await signInWithEmailAndPassword(auth, email, password);
   }, []);
 
   const loginWithGoogle = useCallback(async () => {
-    const email = `user_${Date.now()}@gmail.com`;
-    const name = "Google User";
-    const users = getStoredUsers();
-    if (!users[email]) users[email] = { name, password: "", provider: "google" };
-    localStorage.setItem("earth_users", JSON.stringify(users));
-    const u: User = { id: email, name, email, provider: "google", joinedAt: new Date().toISOString() };
-    saveUser(u); setUser(u);
+    await signInWithPopup(auth, googleProvider);
   }, []);
 
   const loginWithGitHub = useCallback(async () => {
-    const email = `user_${Date.now()}@github.com`;
-    const name = "GitHub User";
-    const users = getStoredUsers();
-    if (!users[email]) users[email] = { name, password: "", provider: "github" };
-    localStorage.setItem("earth_users", JSON.stringify(users));
-    const u: User = { id: email, name, email, provider: "github", joinedAt: new Date().toISOString() };
-    saveUser(u); setUser(u);
+    await signInWithPopup(auth, githubProvider);
   }, []);
 
   const register = useCallback(async (name: string, email: string, password: string) => {
-    const users = getStoredUsers();
-    if (users[email]) throw new Error("Email already registered");
-    users[email] = { name, password, provider: "email" };
-    localStorage.setItem("earth_users", JSON.stringify(users));
-    const u: User = { id: email, name, email, provider: "email", joinedAt: new Date().toISOString() };
-    saveUser(u); setUser(u);
+    const cred = await createUserWithEmailAndPassword(auth, email, password);
+    await firebaseUpdateProfile(cred.user, { displayName: name });
+    await setDoc(doc(db, "profiles", cred.user.uid), {
+      id: cred.user.uid,
+      name,
+      email,
+      provider: "email",
+      joinedAt: serverTimestamp(),
+    });
   }, []);
 
-  const logout = useCallback(() => {
-    localStorage.removeItem("earth_user"); setUser(null);
+  const logout = useCallback(async () => {
+    await signOut(auth);
   }, []);
 
   const forgotPassword = useCallback(async (email: string) => {
-    const users = getStoredUsers();
-    if (!users[email]) throw new Error("No account found with this email");
-    localStorage.setItem("earth_reset_" + email, "true");
+    await sendPasswordResetEmail(auth, email);
   }, []);
 
-  const resetPassword = useCallback((email: string, newPassword: string) => {
-    const users = getStoredUsers();
-    if (!users[email]) throw new Error("No account found");
-    users[email].password = newPassword;
-    localStorage.setItem("earth_users", JSON.stringify(users));
-    localStorage.removeItem("earth_reset_" + email);
+  const resetPassword = useCallback(async (oobCode: string, newPassword: string) => {
+    await confirmPasswordReset(auth, oobCode, newPassword);
   }, []);
 
-  const updateProfile = useCallback((data: { name?: string; email?: string }) => {
-    const current = getStoredUser();
-    if (!current) return;
-    const updated = { ...current, ...data };
-    const users = getStoredUsers();
-    if (data.email && data.email !== current.email) {
-      users[data.email] = users[current.email];
-      delete users[current.email];
+  const updateProfileCb = useCallback(async (data: { name?: string }) => {
+    const fbUser = auth.currentUser;
+    if (!fbUser) return;
+    if (data.name) {
+      await firebaseUpdateProfile(fbUser, { displayName: data.name });
+      await updateDoc(doc(db, "profiles", fbUser.uid), { name: data.name });
     }
-    if (data.name) users[updated.email] = { ...users[updated.email], name: data.name };
-    localStorage.setItem("earth_users", JSON.stringify(users));
-    saveUser(updated); setUser(updated);
+    const profile = await firebaseUserToProfile(fbUser);
+    setUser(profile);
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, login, loginWithGoogle, loginWithGitHub, register, logout, forgotPassword, resetPassword, updateProfile }}>
+    <AuthContext.Provider value={{ user, loading, login, loginWithGoogle, loginWithGitHub, register, logout, forgotPassword, resetPassword, updateProfile: updateProfileCb }}>
       {children}
     </AuthContext.Provider>
   );

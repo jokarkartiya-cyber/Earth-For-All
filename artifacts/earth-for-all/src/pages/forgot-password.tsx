@@ -19,7 +19,7 @@ export default function ForgotPassword() {
       await forgotPassword(email);
       setSent(true);
     } catch (err: any) {
-      setError(err.message);
+      setError(err.code === "auth/user-not-found" ? "No account found with this email" : err.message);
     } finally {
       setLoading(false);
     }
@@ -33,10 +33,9 @@ export default function ForgotPassword() {
             <Mail className="w-7 h-7 text-emerald-400" />
           </div>
           <h1 className="text-2xl font-bold text-white mb-2">Check your email</h1>
-          <p className="text-white/50 text-sm mb-6">We sent a reset link to <span className="text-emerald-400">{email}</span></p>
-          <Link href={`/reset-password?email=${encodeURIComponent(email)}`}
-            className="text-emerald-400 hover:text-emerald-300 text-sm underline">Click here to reset</Link>
-          <div className="mt-6">
+          <p className="text-white/50 text-sm mb-6">We sent a password reset link to <span className="text-emerald-400">{email}</span></p>
+          <p className="text-white/30 text-xs">Click the link in the email to reset your password. It may take a few minutes to arrive.</p>
+          <div className="mt-8">
             <Link href="/login" className="text-white/40 hover:text-white/60 text-sm">Back to sign in</Link>
           </div>
         </div>

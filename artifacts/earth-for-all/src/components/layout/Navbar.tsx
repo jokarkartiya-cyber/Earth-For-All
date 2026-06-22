@@ -167,7 +167,7 @@ export function Navbar() {
                           onClick={() => setIsUserOpen(false)}>
                           <User className="w-3.5 h-3.5" /> Profile
                         </Link>
-                        <button onClick={() => { logout(); setIsUserOpen(false); }}
+                        <button onClick={async () => { await logout(); setIsUserOpen(false); }}
                           className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-red-400 hover:bg-white/5 transition-all">
                           <LogOut className="w-3.5 h-3.5" /> Sign out
                         </button>
@@ -264,7 +264,7 @@ export function Navbar() {
                     className="flex items-center gap-2 text-xs text-white/60 hover:text-white mb-2 transition-colors">
                     <User className="w-3.5 h-3.5" /> Profile
                   </Link>
-                  <button onClick={() => { logout(); setIsMobileMenuOpen(false); }}
+                  <button onClick={async () => { await logout(); setIsMobileMenuOpen(false); }}
                     className="flex items-center gap-2 text-xs text-red-400 hover:text-red-300 transition-colors">
                     <LogOut className="w-3.5 h-3.5" /> Sign out
                   </button>

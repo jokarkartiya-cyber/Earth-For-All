@@ -6,7 +6,7 @@ import { useAuth } from "@/hooks/use-auth";
 
 export default function ResetPassword() {
   const searchParams = Object.fromEntries(new URLSearchParams(useSearch()));
-  const email = searchParams.email || "";
+  const oobCode = searchParams.oobCode || searchParams.code || "";
   const { resetPassword } = useAuth();
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -19,12 +19,9 @@ export default function ResetPassword() {
     setError("");
     if (password.length < 6) return setError("Password must be at least 6 characters");
     if (password !== confirm) return setError("Passwords don't match");
-    try {
-      resetPassword(email, password);
-      setDone(true);
-    } catch (err: any) {
-      setError(err.message);
-    }
+    resetPassword(oobCode, password)
+      .then(() => setDone(true))
+      .catch((err: any) => setError(err.message));
   }
 
   if (done) {
@@ -42,6 +39,21 @@ export default function ResetPassword() {
     );
   }
 
+  if (!oobCode) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background px-4 text-center">
+        <div>
+          <div className="w-14 h-14 rounded-full bg-amber-900/30 border border-amber-700/40 flex items-center justify-center mx-auto mb-4">
+            <Lock className="w-7 h-7 text-amber-400" />
+          </div>
+          <h1 className="text-2xl font-bold text-white mb-2">Invalid reset link</h1>
+          <p className="text-white/50 text-sm mb-6">This link is missing the reset code. Use the link from your email.</p>
+          <Link href="/forgot-password" className="text-emerald-400 hover:text-emerald-300 underline text-sm">Request a new reset link</Link>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4 py-12">
       <div className="w-full max-w-sm">
@@ -50,7 +62,7 @@ export default function ResetPassword() {
             <Globe className="w-7 h-7 text-emerald-400" />
           </div>
           <h1 className="text-2xl font-bold text-white">New password</h1>
-          <p className="text-white/50 text-sm mt-1">For {email}</p>
+          <p className="text-white/50 text-sm mt-1">Enter your new password below</p>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>

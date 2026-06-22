@@ -11,9 +11,9 @@ export default function Profile() {
 
   if (!user) return null;
 
-  function handleSave(e: React.FormEvent) {
+  async function handleSave(e: React.FormEvent) {
     e.preventDefault();
-    updateProfile({ name });
+    await updateProfile({ name });
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   }
@@ -38,13 +38,17 @@ export default function Profile() {
         </Link>
 
         <div className="flex items-center gap-5 mb-10">
-          <div className="w-16 h-16 rounded-full bg-emerald-600 flex items-center justify-center text-2xl font-bold text-white">
-            {user.name.charAt(0).toUpperCase()}
-          </div>
+          {user.avatar ? (
+            <img src={user.avatar} alt="" className="w-16 h-16 rounded-full object-cover" />
+          ) : (
+            <div className="w-16 h-16 rounded-full bg-emerald-600 flex items-center justify-center text-2xl font-bold text-white">
+              {user.name.charAt(0).toUpperCase()}
+            </div>
+          )}
           <div>
             <h1 className="text-2xl font-bold text-white">{user.name}</h1>
             <p className="text-white/50 text-sm">{user.email}</p>
-            <span className="text-xs text-emerald-400/70">{user.provider === "google" ? "Google" : user.provider === "github" ? "GitHub" : "Email"} account</span>
+            <span className="text-xs text-emerald-400/70">{user.provider === "google.com" ? "Google" : user.provider === "github.com" ? "GitHub" : "Email"} account</span>
           </div>
         </div>
 
