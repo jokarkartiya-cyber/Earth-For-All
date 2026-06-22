@@ -1,8 +1,9 @@
 import { Link, useLocation } from "wouter";
 import { AnimatePresence, motion, useScroll, useTransform } from "framer-motion";
-import { Menu, X, Globe, Droplets, TreePine, Bird, Zap, Lightbulb, AlertTriangle, BookOpen, Database, LayoutDashboard, ChevronDown, FlaskConical, Satellite, Landmark, Library, Brain, Sprout } from "lucide-react";
+import { Menu, X, Globe, Droplets, TreePine, Bird, Zap, Lightbulb, AlertTriangle, BookOpen, Database, LayoutDashboard, ChevronDown, FlaskConical, Satellite, Landmark, Library, Brain, Sprout, LogIn, LogOut, User } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/use-auth";
 
 const NAV_LINKS = [
   { href: "/clean-earth", label: "Clean Earth", icon: Globe },
@@ -27,22 +28,29 @@ const MORE_LINKS = [
 
 export function Navbar() {
   const [location] = useLocation();
+  const { user, logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMoreOpen, setIsMoreOpen] = useState(false);
+  const [isUserOpen, setIsUserOpen] = useState(false);
   const { scrollY } = useScroll();
   const bgOpacity = useTransform(scrollY, [0, 50], [0, 0.8]);
   const blur = useTransform(scrollY, [0, 50], [0, 12]);
   const moreRef = useRef<HTMLDivElement>(null);
+  const userRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setIsMobileMenuOpen(false);
     setIsMoreOpen(false);
+    setIsUserOpen(false);
   }, [location]);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (moreRef.current && !moreRef.current.contains(e.target as Node)) {
         setIsMoreOpen(false);
+      }
+      if (userRef.current && !userRef.current.contains(e.target as Node)) {
+        setIsUserOpen(false);
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
@@ -138,10 +146,41 @@ export function Navbar() {
             </div>
           </nav>
 
-          <div className="hidden lg:flex items-center gap-3">
-            <Button asChild variant="default" size="sm" className="bg-emerald-600 hover:bg-emerald-500 text-white border-0 shadow-[0_0_20px_rgba(5,150,105,0.3)] hover:shadow-[0_0_30px_rgba(5,150,105,0.5)] transition-all text-xs">
-              <Link href="/ideas">Join Mission</Link>
-            </Button>
+          <div className="hidden lg:flex items-center gap-2">
+            {user ? (
+              <div ref={userRef} className="relative">
+                <button onClick={() => setIsUserOpen(!isUserOpen)}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all text-sm">
+                  <div className="w-6 h-6 rounded-full bg-emerald-600 flex items-center justify-center text-xs font-bold text-white">
+                    {user.name.charAt(0).toUpperCase()}
+                  </div>
+                  <span className="text-white/80 text-xs font-medium max-w-[100px] truncate">{user.name}</span>
+                </button>
+                <AnimatePresence>
+                  {isUserOpen && (
+                    <motion.div initial={{ opacity: 0, y: 6, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 4, scale: 0.97 }} transition={{ duration: 0.12 }}
+                      className="absolute right-0 top-full mt-2 w-48 bg-[#060e09]/95 backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden shadow-2xl z-50">
+                      <div className="p-1.5">
+                        <div className="px-3 py-2 text-xs text-white/40 border-b border-white/5 mb-1">{user.email}</div>
+                        <button onClick={() => { logout(); setIsUserOpen(false); }}
+                          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-red-400 hover:bg-white/5 transition-all">
+                          <LogOut className="w-3.5 h-3.5" /> Sign out
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            ) : (
+              <>
+                <Button asChild variant="ghost" size="sm" className="text-white/60 hover:text-white text-xs">
+                  <Link href="/login">Sign in</Link>
+                </Button>
+                <Button asChild variant="default" size="sm" className="bg-emerald-600 hover:bg-emerald-500 text-white border-0 text-xs">
+                  <Link href="/register">Sign up</Link>
+                </Button>
+              </>
+            )}
           </div>
 
           <button
@@ -206,11 +245,31 @@ export function Navbar() {
                 );
               })}
 
-              <div className="mt-6">
-                <Button asChild size="lg" className="w-full bg-emerald-600 hover:bg-emerald-500 text-white">
-                  <Link href="/ideas">Join the Mission</Link>
-                </Button>
-              </div>
+              <div className="border-t border-white/5 my-4" />
+              {user ? (
+                <div className="px-4 py-2">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-8 h-8 rounded-full bg-emerald-600 flex items-center justify-center text-sm font-bold text-white">{user.name.charAt(0).toUpperCase()}</div>
+                    <div>
+                      <div className="text-sm font-medium text-white">{user.name}</div>
+                      <div className="text-xs text-white/40">{user.email}</div>
+                    </div>
+                  </div>
+                  <button onClick={() => { logout(); setIsMobileMenuOpen(false); }}
+                    className="flex items-center gap-2 text-xs text-red-400 hover:text-red-300 transition-colors">
+                    <LogOut className="w-3.5 h-3.5" /> Sign out
+                  </button>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-2 px-4">
+                  <Button asChild size="sm" variant="outline" className="border-white/20 text-white hover:bg-white/5">
+                    <Link href="/login">Sign in</Link>
+                  </Button>
+                  <Button asChild size="sm" className="bg-emerald-600 hover:bg-emerald-500 text-white">
+                    <Link href="/register">Sign up</Link>
+                  </Button>
+                </div>
+              )}
             </div>
           </motion.div>
         )}
