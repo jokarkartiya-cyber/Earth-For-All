@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/use-auth";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import NotFound from "@/pages/not-found";
 import { MainLayout } from "@/components/layout/MainLayout";
 import Home from "@/pages/home";
@@ -26,41 +27,41 @@ import Register from "@/pages/register";
 
 const queryClient = new QueryClient();
 
-function Router() {
-  return (
-    <MainLayout>
-      <Switch>
-        <Route path="/" component={Home} />
-        <Route path="/clean-earth" component={CleanEarth} />
-        <Route path="/animals" component={Animals} />
-        <Route path="/forest" component={Forest} />
-        <Route path="/water" component={Water} />
-        <Route path="/technology" component={Technology} />
-        <Route path="/ideas" component={Ideas} />
-        <Route path="/report" component={Report} />
-        <Route path="/articles" component={Articles} />
-        <Route path="/resources" component={Resources} />
-        <Route path="/platform" component={Platform} />
-        <Route path="/evidence" component={Evidence} />
-        <Route path="/live-earth" component={LiveEarth} />
-        <Route path="/solution-bank" component={SolutionBank} />
-        <Route path="/memory-project" component={MemoryProject} />
-        <Route path="/library" component={Library} />
-        <Route path="/login" component={Login} />
-        <Route path="/register" component={Register} />
-        <Route component={NotFound} />
-      </Switch>
-    </MainLayout>
-  );
-}
-
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <TooltipProvider>
           <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-            <Router />
+            <Switch>
+              <Route path="/login" component={Login} />
+              <Route path="/register" component={Register} />
+              <Route>
+                <ProtectedRoute>
+                  <MainLayout>
+                    <Switch>
+                      <Route path="/" component={Home} />
+                      <Route path="/clean-earth" component={CleanEarth} />
+                      <Route path="/animals" component={Animals} />
+                      <Route path="/forest" component={Forest} />
+                      <Route path="/water" component={Water} />
+                      <Route path="/technology" component={Technology} />
+                      <Route path="/ideas" component={Ideas} />
+                      <Route path="/report" component={Report} />
+                      <Route path="/articles" component={Articles} />
+                      <Route path="/resources" component={Resources} />
+                      <Route path="/platform" component={Platform} />
+                      <Route path="/evidence" component={Evidence} />
+                      <Route path="/live-earth" component={LiveEarth} />
+                      <Route path="/solution-bank" component={SolutionBank} />
+                      <Route path="/memory-project" component={MemoryProject} />
+                      <Route path="/library" component={Library} />
+                      <Route component={NotFound} />
+                    </Switch>
+                  </MainLayout>
+                </ProtectedRoute>
+              </Route>
+            </Switch>
           </WouterRouter>
           <Toaster />
         </TooltipProvider>
