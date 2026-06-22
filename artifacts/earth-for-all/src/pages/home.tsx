@@ -1,15 +1,10 @@
+import { useState, useEffect } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { Link } from "wouter";
 import { useRef } from "react";
-import { ArrowRight, Globe, Lightbulb, AlertTriangle, BookOpen, TrendingUp, Leaf, Sun, Heart } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import {
-  useGetStats,
-  useGetRecentIdeas,
-  useGetRecentReports,
-  useListArticles,
-} from "@workspace/api-client-react";
+import { ArrowRight, Globe, Lightbulb, AlertTriangle, BookOpen, TrendingUp, Leaf, Sun, Heart, MessageSquare } from "lucide-react";
+import { collection, query, orderBy, limit, onSnapshot, getDocs } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 
 const CAUSES = [
@@ -24,26 +19,8 @@ const CAUSES = [
 const CHART_COLORS = ["#10b981", "#f59e0b", "#3b82f6", "#6366f1", "#f97316", "#14b8a6"];
 
 const CATEGORY_LABELS: Record<string, string> = {
-  "clean-earth": "Clean Earth",
-  "animal-welfare": "Animals",
-  "forest": "Forest",
-  "water": "Water",
-  "technology": "Technology",
-  "cities": "Cities",
-};
-
-const STATUS_COLORS: Record<string, string> = {
-  pending: "bg-yellow-900/40 text-yellow-300 border-yellow-700/50",
-  "in-progress": "bg-blue-900/40 text-blue-300 border-blue-700/50",
-  resolved: "bg-emerald-900/40 text-emerald-300 border-emerald-700/50",
-};
-
-const TYPE_LABELS: Record<string, string> = {
-  pollution: "Pollution",
-  "animal-emergency": "Animal Emergency",
-  "tree-cutting": "Tree Cutting",
-  "water-pollution": "Water Pollution",
-  garbage: "Garbage",
+  "clean-earth": "Clean Earth", "animal-welfare": "Animals", "forest": "Forest",
+  "water": "Water", "technology": "Technology", "cities": "Cities",
 };
 
 const DAILY_TIPS = [
@@ -74,14 +51,13 @@ const PRINCIPLES = [
 
 const todayTip = DAILY_TIPS[new Date().getDay() % DAILY_TIPS.length];
 
-const cv = {
-  hidden: { opacity: 0 },
-  show: { opacity: 1, transition: { staggerChildren: 0.1 } },
-};
-const iv = {
-  hidden: { opacity: 0, y: 24 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] } },
-};
+const cv = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.1 } } };
+const iv = { hidden: { opacity: 0, y: 24 }, show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] } } };
+
+function getCategoryStyle(c: string) {
+  const m: Record<string, string> = { "clean-earth": "border-emerald-700/50 text-emerald-300 bg-emerald-900/30", "animal-welfare": "border-amber-700/50 text-amber-300 bg-amber-900/30", "forest": "border-green-700/50 text-green-300 bg-green-900/30", "water": "border-blue-700/50 text-blue-300 bg-blue-900/30", "technology": "border-indigo-700/50 text-indigo-300 bg-indigo-900/30", "cities": "border-orange-700/50 text-orange-300 bg-orange-900/30" };
+  return m[c] ?? "border-white/20 text-white/60 bg-white/5";
+}
 
 export default function Home() {
   const heroRef = useRef<HTMLDivElement>(null);
@@ -89,47 +65,49 @@ export default function Home() {
   const y = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
   const opacity = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
 
-  const { data: stats } = useGetStats();
-  const { data: recentIdeas } = useGetRecentIdeas();
-  const { data: recentReports } = useGetRecentReports();
-  const { data: articles } = useListArticles({ limit: 3 });
+  const [recentIdeas, setRecentIdeas] = useState<any[]>([]);
+  const [recentReports, setRecentReports] = useState<any[]>([]);
+  const [totalIdeas, setTotalIdeas] = useState(0);
+  const [totalReports, setTotalReports] = useState(0);
+  const [categoryData, setCategoryData] = useState<{ name: string; value: number }[]>([]);
 
-  const chartData = Array.isArray(stats?.ideasByCategory) ? stats.ideasByCategory.map((c) => ({
-    name: CATEGORY_LABELS[c.category] ?? c.category,
-    value: c.count,
-  })) : [];
+  useEffect(() => {
+    const unsub1 = onSnapshot(query(collection(db, "ideas"), orderBy("createdAt", "desc"), limit(6)), (snap) => {
+      const ideas = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      setRecentIdeas(ideas);
+      setTotalIdeas(snap.size);
+
+      const cats: Record<string, number> = {};
+      ideas.forEach((i: any) => { if (i.category) cats[i.category] = (cats[i.category] || 0) + 1; });
+      setCategoryData(Object.entries(cats).map(([k, v]) => ({ name: CATEGORY_LABELS[k] || k, value: v })));
+    });
+    const unsub2 = onSnapshot(query(collection(db, "reports"), orderBy("createdAt", "desc"), limit(4)), (snap) => {
+      setRecentReports(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+      setTotalReports(snap.size);
+    });
+    return () => { unsub1(); unsub2(); };
+  }, []);
 
   return (
     <div className="flex flex-col">
-
-      {/* ── HERO ── */}
       <section ref={heroRef} className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20">
         <motion.div style={{ y }} className="absolute inset-0 pointer-events-none">
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_0%,rgba(16,185,129,0.15)_0%,transparent_60%)]" />
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_80%_80%,rgba(59,130,246,0.08)_0%,transparent_50%)]" />
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_20%_60%,rgba(245,158,11,0.06)_0%,transparent_40%)]" />
-          <div className="absolute inset-0 opacity-[0.03]"
-            style={{ backgroundImage: "linear-gradient(hsl(152 40% 50%) 1px, transparent 1px), linear-gradient(90deg, hsl(152 40% 50%) 1px, transparent 1px)", backgroundSize: "80px 80px" }}
-          />
+          <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: "linear-gradient(hsl(152 40% 50%) 1px, transparent 1px), linear-gradient(90deg, hsl(152 40% 50%) 1px, transparent 1px)", backgroundSize: "80px 80px" }} />
         </motion.div>
 
         <motion.div style={{ opacity }} className="relative z-10 container mx-auto px-4 text-center max-w-5xl">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.1 }}>
-            <span className="inline-block px-4 py-1.5 rounded-full text-xs font-semibold tracking-widest uppercase border border-emerald-700/50 text-emerald-400 bg-emerald-900/30 mb-8">
-              Global Mission Platform
-            </span>
+            <span className="inline-block px-4 py-1.5 rounded-full text-xs font-semibold tracking-widest uppercase border border-emerald-700/50 text-emerald-400 bg-emerald-900/30 mb-8">Global Mission Platform</span>
           </motion.div>
-
           <motion.h1 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.2 }}
             className="text-5xl md:text-7xl lg:text-8xl font-bold leading-tight mb-4">
             <span className="text-gradient-primary">Earth For All</span>
           </motion.h1>
-
           <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.35 }}
-            className="text-xl md:text-2xl text-emerald-400/80 font-medium tracking-wider mb-4">
-            धरती सबकी है
-          </motion.p>
-
+            className="text-xl md:text-2xl text-emerald-400/80 font-medium tracking-wider mb-4">धरती सबकी है</motion.p>
           <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.45 }}
             className="text-lg md:text-xl text-white/60 max-w-2xl mx-auto leading-relaxed mb-3">
             The Earth does not belong only to humans. Every animal, bird, tree, river, and living being has equal value.
@@ -138,32 +116,29 @@ export default function Home() {
             className="text-base text-white/40 max-w-xl mx-auto leading-relaxed mb-12">
             Our technology and progress must benefit all life — not just one species. Join the mission.
           </motion.p>
-
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.55 }}
             className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button asChild size="lg" className="bg-emerald-600 hover:bg-emerald-500 text-white border-0 shadow-[0_0_30px_rgba(5,150,105,0.4)] hover:shadow-[0_0_50px_rgba(5,150,105,0.6)] text-base px-8 h-14 transition-all">
-              <Link href="/ideas">Join the Mission <ArrowRight className="ml-2 w-5 h-5" /></Link>
-            </Button>
-            <Button asChild size="lg" variant="outline" className="border-white/20 text-white hover:bg-white/5 text-base px-8 h-14">
-              <Link href="/report">Report an Issue</Link>
-            </Button>
+            <a href="/ideas" className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-medium px-8 h-14 rounded-xl text-base transition-all shadow-[0_0_30px_rgba(5,150,105,0.4)] hover:shadow-[0_0_50px_rgba(5,150,105,0.6)]">
+              Join the Mission <ArrowRight className="w-5 h-5" />
+            </a>
+            <a href="/report" className="inline-flex items-center gap-2 border border-white/20 text-white hover:bg-white/5 font-medium px-8 h-14 rounded-xl text-base transition-all">
+              Report an Issue
+            </a>
           </motion.div>
 
-          {stats && (
-            <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.7 }}
-              className="grid grid-cols-3 gap-6 mt-20 max-w-lg mx-auto">
-              {[
-                { value: stats.totalIdeas, label: "Ideas Shared" },
-                { value: stats.totalReports, label: "Issues Reported" },
-                { value: stats.totalArticles, label: "Articles" },
-              ].map((s) => (
-                <div key={s.label} className="text-center">
-                  <div className="text-3xl md:text-4xl font-bold text-emerald-400">{s.value}</div>
-                  <div className="text-xs text-white/40 mt-1 uppercase tracking-wider">{s.label}</div>
-                </div>
-              ))}
-            </motion.div>
-          )}
+          <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.7 }}
+            className="grid grid-cols-3 gap-6 mt-20 max-w-lg mx-auto">
+            {[
+              { value: totalIdeas || "--", label: "Ideas Shared" },
+              { value: totalReports || "--", label: "Issues Reported" },
+              { value: "Coming", label: "Articles" },
+            ].map((s) => (
+              <div key={s.label} className="text-center">
+                <div className="text-3xl md:text-4xl font-bold text-emerald-400">{s.value}</div>
+                <div className="text-xs text-white/40 mt-1 uppercase tracking-wider">{s.label}</div>
+              </div>
+            ))}
+          </motion.div>
         </motion.div>
 
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.5 }}
@@ -176,7 +151,6 @@ export default function Home() {
         </motion.div>
       </section>
 
-      {/* ── DAILY TIP ── */}
       <section className="py-8 container mx-auto px-4 max-w-2xl">
         <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
           <div className={`bg-gradient-to-r ${todayTip.bg} border ${todayTip.border} rounded-2xl px-6 py-5 flex items-start gap-4`}>
@@ -191,7 +165,6 @@ export default function Home() {
         </motion.div>
       </section>
 
-      {/* ── GLOBAL PROBLEMS ── */}
       <section className="py-16 container mx-auto px-4">
         <motion.div initial="hidden" whileInView="show" viewport={{ once: true }} variants={cv}>
           <motion.div variants={iv} className="text-center mb-12">
@@ -213,38 +186,32 @@ export default function Home() {
         </motion.div>
       </section>
 
-      {/* ── CAUSES GRID ── */}
       <section className="py-16 container mx-auto px-4">
         <motion.div initial="hidden" whileInView="show" viewport={{ once: true, margin: "-100px" }} variants={cv}>
           <motion.div variants={iv} className="text-center mb-16">
             <h2 className="text-3xl md:text-5xl font-bold text-white mb-4">Six Causes. One Planet.</h2>
-            <p className="text-white/50 max-w-xl mx-auto text-lg">
-              Every mission, every idea, every report is a step toward a world where all life thrives together.
-            </p>
+            <p className="text-white/50 max-w-xl mx-auto text-lg">Every mission, every idea, every report is a step toward a world where all life thrives together.</p>
           </motion.div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {CAUSES.map((cause) => (
               <motion.div key={cause.href} variants={iv}>
-                <Link href={cause.href}>
+                <a href={cause.href}>
                   <div className={`group relative overflow-hidden rounded-2xl border ${cause.border} bg-gradient-to-br ${cause.color} p-6 h-full cursor-pointer hover:scale-[1.02] transition-all duration-300 hover:shadow-[0_0_40px_rgba(16,185,129,0.1)]`}>
                     <div className="absolute inset-0 bg-gradient-to-br from-white/0 to-white/0 group-hover:from-white/[0.02] group-hover:to-white/[0.02] transition-all duration-500" />
-                    <div className={`inline-block text-xs font-semibold px-3 py-1 rounded-full mb-4 ${cause.badge}`}>
-                      {cause.icon}{cause.label}
-                    </div>
+                    <div className={`inline-block text-xs font-semibold px-3 py-1 rounded-full mb-4 ${cause.badge}`}>{cause.icon}{cause.label}</div>
                     <p className="text-white/60 text-sm leading-relaxed">{cause.desc}</p>
                     <div className="mt-6 flex items-center gap-2 text-white/40 group-hover:text-white/70 transition-colors text-sm">
                       <span>Explore</span>
                       <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                     </div>
                   </div>
-                </Link>
+                </a>
               </motion.div>
             ))}
           </div>
         </motion.div>
       </section>
 
-      {/* ── MISSION STATEMENT ── */}
       <section className="py-20 relative overflow-hidden bg-white/[0.02] border-y border-white/5">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(16,185,129,0.07)_0%,transparent_60%)] pointer-events-none" />
         <div className="container mx-auto px-4 max-w-4xl text-center relative z-10">
@@ -252,12 +219,9 @@ export default function Home() {
             <motion.div variants={iv} className="w-16 h-16 rounded-3xl bg-emerald-900/40 border border-emerald-700/40 flex items-center justify-center mx-auto mb-8">
               <Globe className="w-8 h-8 text-emerald-400" />
             </motion.div>
-            <motion.h2 variants={iv} className="text-4xl md:text-5xl font-bold text-white mb-6 leading-tight">
-              हमारा संकल्प
-            </motion.h2>
+            <motion.h2 variants={iv} className="text-4xl md:text-5xl font-bold text-white mb-6 leading-tight">हमारा संकल्प</motion.h2>
             <motion.p variants={iv} className="text-white/60 text-lg leading-relaxed mb-4 max-w-3xl mx-auto">
-              हम एक ऐसी दुनिया बनाना चाहते हैं जहाँ हर शहर में साफ हवा हो, हर नदी में साफ पानी हो, 
-              हर सड़क पर जानवरों के लिए पानी हो, हर इमारत पर पेड़ हों, और हर इंसान अपनी ज़िम्मेदारी समझे।
+              हम एक ऐसी दुनिया बनाना चाहते हैं जहाँ हर शहर में साफ हवा हो, हर नदी में साफ पानी हो, हर सड़क पर जानवरों के लिए पानी हो, हर इमारत पर पेड़ हों, और हर इंसान अपनी ज़िम्मेदारी समझे।
             </motion.p>
             <motion.p variants={iv} className="text-white/40 text-base leading-relaxed max-w-2xl mx-auto">
               यह किसी एक सरकार का काम नहीं। यह हम सबका काम है — एक community, एक movement।
@@ -266,7 +230,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── CORE PRINCIPLES ── */}
       <section className="py-16 container mx-auto px-4">
         <motion.div initial="hidden" whileInView="show" viewport={{ once: true }} variants={cv}>
           <motion.h2 variants={iv} className="text-3xl md:text-4xl font-bold text-white mb-12 text-center">🌱 हमारे Core Principles</motion.h2>
@@ -288,8 +251,7 @@ export default function Home() {
         </motion.div>
       </section>
 
-      {/* ── STATS + CHART ── */}
-      {stats && chartData.length > 0 && (
+      {categoryData.length > 0 && (
         <section className="py-16 bg-white/[0.02] border-y border-white/5">
           <div className="container mx-auto px-4">
             <motion.div initial="hidden" whileInView="show" viewport={{ once: true }} variants={cv}
@@ -299,9 +261,9 @@ export default function Home() {
                 <p className="text-white/50 mb-8">Ideas span every domain — from plastic-free cities to animal rescue technology. Together, we're mapping the future.</p>
                 <div className="grid grid-cols-3 gap-4">
                   {[
-                    { n: stats.totalIdeas, label: "Ideas", color: "text-emerald-400" },
-                    { n: stats.totalReports, label: "Reports", color: "text-amber-400" },
-                    { n: stats.totalArticles, label: "Articles", color: "text-blue-400" },
+                    { n: totalIdeas, label: "Ideas", color: "text-emerald-400" },
+                    { n: totalReports, label: "Reports", color: "text-amber-400" },
+                    { n: "Soon", label: "Articles", color: "text-blue-400" },
                   ].map((s) => (
                     <div key={s.label} className="bg-white/5 border border-white/10 rounded-xl p-4 text-center">
                       <div className={`text-2xl font-bold ${s.color}`}>{s.n}</div>
@@ -314,16 +276,14 @@ export default function Home() {
                 <h3 className="text-lg font-semibold text-white/70 mb-6">Ideas by Category</h3>
                 <ResponsiveContainer width="100%" height={220}>
                   <PieChart>
-                    <Pie data={chartData} cx="50%" cy="50%" innerRadius={55} outerRadius={90} paddingAngle={3} dataKey="value">
-                      {chartData.map((_, i) => (
-                        <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
-                      ))}
+                    <Pie data={categoryData} cx="50%" cy="50%" innerRadius={55} outerRadius={90} paddingAngle={3} dataKey="value">
+                      {categoryData.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
                     </Pie>
                     <Tooltip contentStyle={{ background: "hsl(152 47% 7%)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "8px", color: "white" }} />
                   </PieChart>
                 </ResponsiveContainer>
                 <div className="flex flex-wrap gap-3 justify-center mt-4">
-                  {chartData.map((d, i) => (
+                  {categoryData.map((d, i) => (
                     <div key={d.name} className="flex items-center gap-1.5 text-xs text-white/60">
                       <div className="w-2.5 h-2.5 rounded-full" style={{ background: CHART_COLORS[i % CHART_COLORS.length] }} />
                       {d.name}
@@ -336,8 +296,7 @@ export default function Home() {
         </section>
       )}
 
-      {/* ── RECENT IDEAS ── */}
-      {Array.isArray(recentIdeas) && recentIdeas.length > 0 && (
+      {recentIdeas.length > 0 && (
         <section className="py-24 container mx-auto px-4">
           <motion.div initial="hidden" whileInView="show" viewport={{ once: true }} variants={cv}>
             <motion.div variants={iv} className="flex items-center justify-between mb-12">
@@ -348,13 +307,11 @@ export default function Home() {
                 </div>
                 <h2 className="text-3xl font-bold text-white">Recent Ideas</h2>
               </div>
-              <Button asChild variant="ghost" className="text-white/50 hover:text-white hidden sm:flex">
-                <Link href="/ideas">View all <ArrowRight className="ml-2 w-4 h-4" /></Link>
-              </Button>
+              <a href="/ideas" className="text-white/50 hover:text-white text-sm hidden sm:flex items-center gap-2 transition-colors">View all <ArrowRight className="w-4 h-4" /></a>
             </motion.div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {recentIdeas.slice(0, 6).map((idea) => (
-                <motion.div key={idea.id} variants={iv} data-testid={`idea-card-${idea.id}`}
+              {recentIdeas.slice(0, 6).map((idea: any) => (
+                <motion.div key={idea.id} variants={iv}
                   className="bg-white/[0.03] border border-white/10 rounded-2xl p-6 hover:bg-white/[0.06] hover:border-white/20 transition-all duration-300 group">
                   <div className={`inline-block text-xs font-semibold px-2.5 py-1 rounded-full mb-4 border ${getCategoryStyle(idea.category)}`}>
                     {CATEGORY_LABELS[idea.category] ?? idea.category}
@@ -363,9 +320,7 @@ export default function Home() {
                   <p className="text-white/40 text-xs leading-relaxed line-clamp-3">{idea.description}</p>
                   <div className="mt-4 flex items-center justify-between text-xs text-white/30">
                     <span>{idea.authorName}</span>
-                    <span className="flex items-center gap-1 text-emerald-500">
-                      <TrendingUp className="w-3 h-3" /> {idea.upvotes}
-                    </span>
+                    <span className="flex items-center gap-1 text-emerald-500"><TrendingUp className="w-3 h-3" /> {idea.upvotes}</span>
                   </div>
                 </motion.div>
               ))}
@@ -374,8 +329,7 @@ export default function Home() {
         </section>
       )}
 
-      {/* ── RECENT REPORTS ── */}
-      {Array.isArray(recentReports) && recentReports.length > 0 && (
+      {recentReports.length > 0 && (
         <section className="py-16 bg-white/[0.02] border-y border-white/5">
           <div className="container mx-auto px-4">
             <motion.div initial="hidden" whileInView="show" viewport={{ once: true }} variants={cv}>
@@ -387,22 +341,16 @@ export default function Home() {
                   </div>
                   <h2 className="text-3xl font-bold text-white">Recent Issues</h2>
                 </div>
-                <Button asChild variant="ghost" className="text-white/50 hover:text-white hidden sm:flex">
-                  <Link href="/report">View all <ArrowRight className="ml-2 w-4 h-4" /></Link>
-                </Button>
+                <a href="/report" className="text-white/50 hover:text-white text-sm hidden sm:flex items-center gap-2 transition-colors">View all <ArrowRight className="w-4 h-4" /></a>
               </motion.div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {recentReports.slice(0, 4).map((report) => (
-                  <motion.div key={report.id} variants={iv} data-testid={`report-card-${report.id}`}
+                {recentReports.slice(0, 4).map((report: any) => (
+                  <motion.div key={report.id} variants={iv}
                     className="bg-white/[0.03] border border-white/10 rounded-xl p-5 flex gap-4">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-2 flex-wrap">
-                        <Badge variant="outline" className="text-xs border-red-800/50 text-red-300 bg-red-900/20">
-                          {TYPE_LABELS[report.type] ?? report.type}
-                        </Badge>
-                        <span className={`text-xs px-2 py-0.5 rounded-full border ${STATUS_COLORS[report.status] ?? "bg-white/10 text-white/60 border-white/20"}`}>
-                          {report.status}
-                        </span>
+                        <span className="text-xs border border-red-800/50 text-red-300 bg-red-900/20 px-2.5 py-0.5 rounded-full">{report.type}</span>
+                        <span className={`text-xs px-2 py-0.5 rounded-full border ${report.status === "pending" ? "bg-yellow-900/40 text-yellow-300 border-yellow-700/50" : report.status === "in-progress" ? "bg-blue-900/40 text-blue-300 border-blue-700/50" : "bg-emerald-900/40 text-emerald-300 border-emerald-700/50"}`}>{report.status}</span>
                       </div>
                       <p className="text-white/70 text-sm line-clamp-2">{report.description}</p>
                       <p className="text-white/30 text-xs mt-2">{report.location}</p>
@@ -415,45 +363,6 @@ export default function Home() {
         </section>
       )}
 
-      {/* ── RECENT ARTICLES ── */}
-      {Array.isArray(articles) && articles.length > 0 && (
-        <section className="py-24 container mx-auto px-4">
-          <motion.div initial="hidden" whileInView="show" viewport={{ once: true }} variants={cv}>
-            <motion.div variants={iv} className="flex items-center justify-between mb-12">
-              <div>
-                <div className="flex items-center gap-3 mb-3">
-                  <BookOpen className="w-5 h-5 text-blue-400" />
-                  <span className="text-xs font-semibold uppercase tracking-widest text-blue-400/70">Education Hub</span>
-                </div>
-                <h2 className="text-3xl font-bold text-white">Learn &amp; Explore</h2>
-              </div>
-              <Button asChild variant="ghost" className="text-white/50 hover:text-white hidden sm:flex">
-                <Link href="/articles">All articles <ArrowRight className="ml-2 w-4 h-4" /></Link>
-              </Button>
-            </motion.div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {articles.slice(0, 3).map((article) => (
-                <motion.div key={article.id} variants={iv} data-testid={`article-card-${article.id}`}
-                  className="bg-white/[0.03] border border-white/10 rounded-2xl overflow-hidden hover:border-white/20 transition-all duration-300 group">
-                  <div className="h-40 bg-gradient-to-br from-emerald-900/40 to-blue-900/20 flex items-center justify-center">
-                    <Globe className="w-12 h-12 text-emerald-600/50" />
-                  </div>
-                  <div className="p-5">
-                    <div className={`inline-block text-xs font-semibold px-2.5 py-1 rounded-full mb-3 border ${getCategoryStyle(article.category)}`}>
-                      {CATEGORY_LABELS[article.category] ?? article.category}
-                    </div>
-                    <h3 className="font-semibold text-white text-sm leading-snug mb-2 group-hover:text-emerald-300 transition-colors">{article.title}</h3>
-                    <p className="text-white/40 text-xs line-clamp-2">{article.summary}</p>
-                    <p className="text-white/25 text-xs mt-3">{article.readingTimeMinutes} min read</p>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
-        </section>
-      )}
-
-      {/* ── EARTH PLEDGE / CTA ── */}
       <section className="py-24 relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(16,185,129,0.12)_0%,transparent_60%)] pointer-events-none" />
         <div className="container mx-auto px-4 text-center relative z-10 max-w-3xl">
@@ -461,45 +370,23 @@ export default function Home() {
             <motion.div variants={iv} className="w-16 h-16 rounded-full bg-emerald-900/40 border border-emerald-700/40 flex items-center justify-center mx-auto mb-8">
               <Heart className="w-8 h-8 text-emerald-400" />
             </motion.div>
-            <motion.h2 variants={iv} className="text-4xl md:text-5xl font-bold text-white mb-6">
-              🌍 Earth Pledge
-            </motion.h2>
+            <motion.h2 variants={iv} className="text-4xl md:text-5xl font-bold text-white mb-6">🌍 Earth Pledge</motion.h2>
             <motion.div variants={iv}
               className="bg-gradient-to-br from-emerald-900/20 to-teal-900/10 border border-emerald-800/30 rounded-2xl p-8 mb-10 text-left">
               <p className="text-white/70 text-base leading-relaxed italic text-center">
-                "मैं वादा करता/करती हूँ कि मैं धरती की देखभाल करूंगा/करूंगी —
-                न सिर्फ इंसानों के लिए, बल्कि हर उस जीव के लिए जो इस ग्रह को अपना घर मानता है।
-                मैं छोटी-छोटी आदतें बदलूंगा/बदलूंगी, आवाज़ उठाऊंगा/उठाऊंगी, और दूसरों को inspire करूंगा/करूंगी।
-                क्योंकि धरती सबकी है।"
+                "मैं वादा करता/करती हूँ कि मैं धरती की देखभाल करूंगा/करूंगी — न सिर्फ इंसानों के लिए, बल्कि हर उस जीव के लिए जो इस ग्रह को अपना घर मानता है। मैं छोटी-छोटी आदतें बदलूंगा/बदलूंगी, आवाज़ उठाऊंगा/उठाऊंगी, और दूसरों को inspire करूंगा/करूंगी। क्योंकि धरती सबकी है।"
               </p>
             </motion.div>
             <motion.p variants={iv} className="text-white/50 text-lg max-w-2xl mx-auto mb-10 leading-relaxed">
               Share an idea. Report a problem. Plant a seed of change. Every action, no matter how small, is a vote for a better Earth.
             </motion.p>
             <motion.div variants={iv} className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button asChild size="lg" className="bg-emerald-600 hover:bg-emerald-500 text-white border-0 h-14 px-10 text-base shadow-[0_0_30px_rgba(5,150,105,0.4)] hover:shadow-[0_0_50px_rgba(5,150,105,0.6)]">
-                <Link href="/ideas">Share Your Idea</Link>
-              </Button>
-              <Button asChild size="lg" variant="outline" className="border-white/20 text-white hover:bg-white/5 h-14 px-10 text-base">
-                <Link href="/articles">Start Learning</Link>
-              </Button>
+              <a href="/ideas" className="inline-flex items-center bg-emerald-600 hover:bg-emerald-500 text-white font-medium h-14 px-10 text-base rounded-xl transition-all shadow-[0_0_30px_rgba(5,150,105,0.4)] hover:shadow-[0_0_50px_rgba(5,150,105,0.6)]">Share Your Idea</a>
+              <a href="/articles" className="inline-flex items-center border border-white/20 text-white hover:bg-white/5 font-medium h-14 px-10 text-base rounded-xl transition-all">Start Learning</a>
             </motion.div>
           </motion.div>
         </div>
       </section>
-
     </div>
   );
-}
-
-function getCategoryStyle(category: string) {
-  const map: Record<string, string> = {
-    "clean-earth": "border-emerald-700/50 text-emerald-300 bg-emerald-900/30",
-    "animal-welfare": "border-amber-700/50 text-amber-300 bg-amber-900/30",
-    "forest": "border-green-700/50 text-green-300 bg-green-900/30",
-    "water": "border-blue-700/50 text-blue-300 bg-blue-900/30",
-    "technology": "border-indigo-700/50 text-indigo-300 bg-indigo-900/30",
-    "cities": "border-orange-700/50 text-orange-300 bg-orange-900/30",
-  };
-  return map[category] ?? "border-white/20 text-white/60 bg-white/5";
 }
