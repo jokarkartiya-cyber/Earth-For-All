@@ -27,6 +27,7 @@ import Register from "@/pages/register";
 import ForgotPassword from "@/pages/forgot-password";
 import ResetPassword from "@/pages/reset-password";
 import Profile from "@/pages/profile";
+import PhoneLogin from "@/pages/phone-login";
 
 const queryClient = new QueryClient();
 
@@ -41,6 +42,7 @@ function App() {
               <Route path="/register" component={Register} />
               <Route path="/forgot-password" component={ForgotPassword} />
               <Route path="/reset-password" component={ResetPassword} />
+              <Route path="/phone-login" component={PhoneLogin} />
               <Route>
                 <ProtectedRoute>
                   <MainLayout>

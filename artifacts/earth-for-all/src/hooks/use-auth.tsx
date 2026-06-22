@@ -8,15 +8,19 @@ import {
   sendPasswordResetEmail,
   confirmPasswordReset,
   updateProfile as firebaseUpdateProfile,
+  RecaptchaVerifier,
+  signInWithPhoneNumber,
   type User as FirebaseUser,
+  type ConfirmationResult,
 } from "firebase/auth";
 import { doc, getDoc, setDoc, updateDoc, serverTimestamp } from "firebase/firestore";
-import { auth, db, googleProvider, githubProvider } from "@/lib/firebase";
+import { auth, db, googleProvider } from "@/lib/firebase";
 
 export interface UserProfile {
   id: string;
   name: string;
   email: string;
+  phone?: string;
   avatar?: string;
   provider?: string;
   joinedAt?: string;
@@ -27,7 +31,8 @@ interface AuthContextType {
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   loginWithGoogle: () => Promise<void>;
-  loginWithGitHub: () => Promise<void>;
+  loginWithPhone: (phone: string, recaptchaContainerId: string) => Promise<ConfirmationResult>;
+  verifyPhoneOtp: (confirmationResult: ConfirmationResult, otp: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   forgotPassword: (email: string) => Promise<void>;
@@ -45,8 +50,9 @@ async function firebaseUserToProfile(fbUser: FirebaseUser): Promise<UserProfile>
   }
   return {
     id: fbUser.uid,
-    name: fbUser.displayName || fbUser.email?.split("@")[0] || "User",
+    name: fbUser.displayName || fbUser.email?.split("@")[0] || fbUser.phoneNumber || "User",
     email: fbUser.email || "",
+    phone: fbUser.phoneNumber || undefined,
     avatar: fbUser.photoURL || undefined,
     provider: fbUser.providerData[0]?.providerId || "email",
     joinedAt: fbUser.metadata.creationTime || new Date().toISOString(),
@@ -78,8 +84,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await signInWithPopup(auth, googleProvider);
   }, []);
 
-  const loginWithGitHub = useCallback(async () => {
-    await signInWithPopup(auth, githubProvider);
+  const loginWithPhone = useCallback(async (phone: string, recaptchaContainerId: string): Promise<ConfirmationResult> => {
+    const recaptcha = new RecaptchaVerifier(auth, recaptchaContainerId, { size: "invisible" });
+    const confirmation = await signInWithPhoneNumber(auth, phone, recaptcha);
+    return confirmation;
+  }, []);
+
+  const verifyPhoneOtp = useCallback(async (confirmationResult: ConfirmationResult, otp: string) => {
+    await confirmationResult.confirm(otp);
   }, []);
 
   const register = useCallback(async (name: string, email: string, password: string) => {
@@ -118,7 +130,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, loginWithGoogle, loginWithGitHub, register, logout, forgotPassword, resetPassword, updateProfile: updateProfileCb }}>
+    <AuthContext.Provider value={{ user, loading, login, loginWithGoogle, loginWithPhone, verifyPhoneOtp, register, logout, forgotPassword, resetPassword, updateProfile: updateProfileCb }}>
       {children}
     </AuthContext.Provider>
   );
