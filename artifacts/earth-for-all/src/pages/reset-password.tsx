@@ -1,12 +1,14 @@
 import { useState } from "react";
-import { Link, useSearch } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Globe, Lock, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 
 export default function ResetPassword() {
-  const searchParams = Object.fromEntries(new URLSearchParams(useSearch()));
-  const oobCode = searchParams.oobCode || searchParams.code || "";
+  const [loc] = useLocation();
+  const params = Object.fromEntries(new URLSearchParams(loc.split("?")[1] || ""));
+  const oobCode = params.oobCode || "";
+  const mode = params.mode || "";
   const { resetPassword } = useAuth();
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -14,14 +16,17 @@ export default function ResetPassword() {
   const [done, setDone] = useState(false);
   const [error, setError] = useState("");
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
     if (password.length < 6) return setError("Password must be at least 6 characters");
     if (password !== confirm) return setError("Passwords don't match");
-    resetPassword(oobCode, password)
-      .then(() => setDone(true))
-      .catch((err: any) => setError(err.message));
+    try {
+      await resetPassword(oobCode, password);
+      setDone(true);
+    } catch (err: any) {
+      setError(err.code === "auth/expired-action-code" ? "Link expired. Request a new one." : err.message);
+    }
   }
 
   if (done) {
@@ -39,7 +44,7 @@ export default function ResetPassword() {
     );
   }
 
-  if (!oobCode) {
+  if (!oobCode || mode !== "resetPassword") {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background px-4 text-center">
         <div>
@@ -47,7 +52,7 @@ export default function ResetPassword() {
             <Lock className="w-7 h-7 text-amber-400" />
           </div>
           <h1 className="text-2xl font-bold text-white mb-2">Invalid reset link</h1>
-          <p className="text-white/50 text-sm mb-6">This link is missing the reset code. Use the link from your email.</p>
+          <p className="text-white/50 text-sm mb-6">Use the link from your password reset email.</p>
           <Link href="/forgot-password" className="text-emerald-400 hover:text-emerald-300 underline text-sm">Request a new reset link</Link>
         </div>
       </div>

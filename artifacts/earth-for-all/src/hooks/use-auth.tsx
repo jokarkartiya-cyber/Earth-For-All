@@ -96,7 +96,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const forgotPassword = useCallback(async (email: string) => {
-    await sendPasswordResetEmail(auth, email);
+    await sendPasswordResetEmail(auth, email, {
+      url: window.location.origin + "/reset-password",
+      handleCodeInApp: true,
+    });
   }, []);
 
   const resetPassword = useCallback(async (oobCode: string, newPassword: string) => {
