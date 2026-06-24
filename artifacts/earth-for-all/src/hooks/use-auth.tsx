@@ -61,7 +61,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (fbUser) => {
       if (fbUser) {
-        const profile = await firebaseUserToProfile(fbUser);
+        let profile = await firebaseUserToProfile(fbUser);
+        // Auto-create profile if missing (ensures email is saved for notifications)
+        const profileRef = doc(db, "profiles", fbUser.uid);
+        const existing = await getDoc(profileRef);
+        if (!existing.exists()) {
+          const newProfile = {
+            id: fbUser.uid,
+            name: fbUser.displayName || fbUser.email?.split("@")[0] || "User",
+            email: fbUser.email || "",
+            provider: fbUser.providerData[0]?.providerId || "email",
+            joinedAt: serverTimestamp(),
+          };
+          await setDoc(profileRef, newProfile);
+          profile = newProfile;
+        }
         setUser(profile);
       } else {
         setUser(null);
@@ -76,7 +90,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const loginWithGoogle = useCallback(async () => {
-    await signInWithPopup(auth, googleProvider);
+    const cred = await signInWithPopup(auth, googleProvider);
+    // Ensure profile exists for email notifications
+    const profileRef = doc(db, "profiles", cred.user.uid);
+    const existing = await getDoc(profileRef);
+    if (!existing.exists()) {
+      await setDoc(profileRef, {
+        id: cred.user.uid,
+        name: cred.user.displayName || cred.user.email?.split("@")[0] || "User",
+        email: cred.user.email || "",
+        provider: "google.com",
+        joinedAt: serverTimestamp(),
+      });
+    }
   }, []);
 
   const register = useCallback(async (name: string, email: string, password: string) => {

@@ -4,6 +4,7 @@ import { Menu, X, Globe, Droplets, TreePine, Bird, Zap, Lightbulb, AlertTriangle
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
+import { NotificationBell } from "@/components/NotificationBell";
 
 const NAV_LINKS = [
   { href: "/clean-earth", label: "Clean Earth", icon: Globe },
@@ -146,7 +147,8 @@ export function Navbar() {
             </div>
           </nav>
 
-          <div className="hidden lg:flex items-center gap-2">
+          <div className="hidden lg:flex items-center gap-1">
+            <NotificationBell />
             {user ? (
               <div ref={userRef} className="relative">
                 <button onClick={() => setIsUserOpen(!isUserOpen)}
@@ -190,12 +192,15 @@ export function Navbar() {
             )}
           </div>
 
-          <button
-            className="lg:hidden p-2 text-white"
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          >
-            {isMobileMenuOpen ? <X /> : <Menu />}
-          </button>
+          <div className="lg:hidden flex items-center gap-1">
+            <NotificationBell />
+            <button
+              className="p-2 text-white"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            >
+              {isMobileMenuOpen ? <X /> : <Menu />}
+            </button>
+          </div>
         </div>
       </motion.header>
 

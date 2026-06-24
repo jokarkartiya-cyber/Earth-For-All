@@ -27,11 +27,13 @@ import Register from "@/pages/register";
 import ForgotPassword from "@/pages/forgot-password";
 import ResetPassword from "@/pages/reset-password";
 import Profile from "@/pages/profile";
-
+import { useDepartmentResponseWatcher, useEmailSender } from "@/components/NotificationBell";
 
 const queryClient = new QueryClient();
 
 function App() {
+  useDepartmentResponseWatcher();
+  useEmailSender();
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
