@@ -3,9 +3,9 @@ import { motion } from "framer-motion";
 import {
   AlertTriangle, MapPin, ExternalLink, Image, Video, MessageSquare,
   Shield, Clock, User, Phone, Mail, Eye, EyeOff, Building2, ChevronRight,
-  ArrowRight, CheckCircle2, SendHorizonal,
+  ArrowRight, CheckCircle2, SendHorizonal, Reply,
 } from "lucide-react";
-import { collection, query, orderBy, onSnapshot, addDoc, updateDoc, doc, setDoc, serverTimestamp, Timestamp } from "firebase/firestore";
+import { collection, query, orderBy, onSnapshot, addDoc, updateDoc, doc, setDoc, serverTimestamp, Timestamp, arrayUnion } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/hooks/use-auth";
 import { CommentSection } from "@/components/CommentSection";
@@ -82,6 +82,16 @@ interface Report {
   assignedDepartment: string;
   departmentResponse: string;
   departmentResponseAt: Timestamp;
+  replies: ReplyItem[];
+  createdAt: Timestamp;
+}
+
+interface ReplyItem {
+  id: string;
+  text: string;
+  authorName: string;
+  authorId: string;
+  isOfficial: boolean;
   createdAt: Timestamp;
 }
 
@@ -146,6 +156,7 @@ export default function Report() {
       assignedDepartment: deptId,
       departmentResponse: "",
       departmentResponseAt: null,
+      replies: [],
       createdAt: serverTimestamp(),
     });
     // Create notification + email for all users
@@ -452,22 +463,6 @@ function ReportCard({ report }: { report: Report }) {
           </div>
         )}
 
-        {/* Department Response */}
-        {report.departmentResponse && (
-          <div className="bg-blue-900/10 border border-blue-800/20 rounded-lg p-3">
-            <div className="flex items-center gap-1.5 mb-1.5">
-              <Building2 className="w-3.5 h-3.5 text-blue-400" />
-              <span className="text-[10px] font-medium text-blue-300 uppercase tracking-wider">Department Response</span>
-              {report.departmentResponseAt?.toDate && (
-                <span className="text-[10px] text-blue-400/50 ml-auto">
-                  {report.departmentResponseAt.toDate().toLocaleDateString()}
-                </span>
-              )}
-            </div>
-            <p className="text-xs text-blue-200/80 leading-relaxed">{report.departmentResponse}</p>
-          </div>
-        )}
-
         {/* Photos / Videos */}
         {report.photos && report.photos.length > 0 && (
           <div className="flex flex-wrap gap-2">
@@ -521,57 +516,85 @@ function ReportCard({ report }: { report: Report }) {
         )}
       </div>
 
-      <DepartmentRespondButton report={report} />
+      <ReplySection report={report} />
       <CommentSection itemId={report.id} itemType="report" />
     </motion.div>
   );
 }
 
-/* ──── DEPARTMENT RESPOND BUTTON ──── */
-function DepartmentRespondButton({ report }: { report: Report }) {
-  const [showInput, setShowInput] = useState(false);
-  const [response, setResponse] = useState("");
+/* ──── REPLY SECTION (anyone can reply) ──── */
+function ReplySection({ report }: { report: Report }) {
+  const { user } = useAuth();
+  const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
-  const [done, setDone] = useState(false);
 
   async function handleSubmit() {
-    if (!response.trim()) return;
+    if (!text.trim() || !user) return;
     setSending(true);
+    const reply: ReplyItem = {
+      id: `${Date.now()}_${user.id}`,
+      text: text.trim(),
+      authorName: user.name,
+      authorId: user.id,
+      isOfficial: user.role === "department",
+      createdAt: serverTimestamp() as Timestamp,
+    };
     await updateDoc(doc(db, "reports", report.id), {
-      departmentResponse: response.trim(),
-      departmentResponseAt: serverTimestamp(),
+      replies: arrayUnion(reply),
     });
-    setResponse("");
+    setText("");
     setSending(false);
-    setShowInput(false);
-    setDone(true);
-    setTimeout(() => setDone(false), 3000);
   }
 
+  const allReplies: ReplyItem[] = [
+    ...(report.replies || []),
+  ].sort((a, b) => {
+    const ta = a.createdAt?.toDate?.()?.getTime() || 0;
+    const tb = b.createdAt?.toDate?.()?.getTime() || 0;
+    return ta - tb;
+  });
+
   return (
-    <div className="px-5 pb-4">
-      {!report.departmentResponse && !showInput && (
-        <button onClick={() => setShowInput(true)}
-          className="flex items-center gap-1.5 text-[10px] text-white/30 hover:text-emerald-400 transition-colors">
-          <Building2 className="w-3 h-3" /> Department Respond
-        </button>
-      )}
-      {showInput && (
-        <div className="flex gap-2">
-          <input type="text" value={response} onChange={e => setResponse(e.target.value)}
-            placeholder="Type department response..."
-            className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-xs placeholder:text-white/20 outline-none focus:border-emerald-500/50 transition-colors" />
-          <button onClick={handleSubmit} disabled={!response.trim() || sending}
-            className="px-3 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:bg-emerald-600/50 text-white rounded-lg text-xs transition-all">
-            {sending ? "..." : "Send"}
-          </button>
-          <button onClick={() => setShowInput(false)}
-            className="px-2 py-2 text-white/30 hover:text-white/60 transition-colors text-xs">
-            Cancel
-          </button>
+    <div className="px-5 pb-4 space-y-2">
+      {/* Old departmentResponse (backward compat) */}
+      {report.departmentResponse && (
+        <div className="bg-blue-900/10 border border-blue-800/20 rounded-lg p-3">
+          <div className="flex items-center gap-1.5 mb-1">
+            <Building2 className="w-3.5 h-3.5 text-blue-400" />
+            <span className="text-[10px] font-medium text-blue-300 uppercase tracking-wider">Department Response</span>
+          </div>
+          <p className="text-xs text-blue-200/80 leading-relaxed">{report.departmentResponse}</p>
         </div>
       )}
-      {done && <p className="text-[10px] text-emerald-400 mt-1">Response sent! Notification email will go to all users.</p>}
+
+      {/* New replies */}
+      {allReplies.map((r) => (
+        <div key={r.id} className={`rounded-lg p-3 border ${r.isOfficial ? "bg-blue-900/10 border-blue-800/20" : "bg-white/[0.02] border-white/5"}`}>
+          <div className="flex items-center gap-1.5 mb-1">
+            <span className="text-[10px] font-medium text-white/60">{r.authorName}</span>
+            {r.isOfficial && (
+              <span className="text-[9px] bg-blue-600/20 text-blue-300 px-1.5 py-0.5 rounded-full border border-blue-500/20 flex items-center gap-0.5">
+                <Shield className="w-2.5 h-2.5" /> Official
+              </span>
+            )}
+            {r.createdAt?.toDate && (
+              <span className="text-[10px] text-white/30 ml-auto">{r.createdAt.toDate().toLocaleDateString()}</span>
+            )}
+          </div>
+          <p className="text-xs text-white/70 leading-relaxed">{r.text}</p>
+        </div>
+      ))}
+
+      {/* Reply input */}
+      <div className="flex gap-2 pt-1">
+        <input type="text" value={text} onChange={e => setText(e.target.value)}
+          placeholder="Write a public reply..."
+          className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-xs placeholder:text-white/20 outline-none focus:border-emerald-500/50 transition-colors" />
+        <button onClick={handleSubmit} disabled={!text.trim() || sending}
+          className="px-3 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:bg-emerald-600/50 text-white rounded-lg text-xs transition-all flex items-center gap-1.5">
+          <SendHorizonal className="w-3 h-3" />
+        </button>
+      </div>
     </div>
   );
 }
