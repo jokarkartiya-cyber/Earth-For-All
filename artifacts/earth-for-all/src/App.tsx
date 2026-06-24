@@ -27,6 +27,8 @@ import Register from "@/pages/register";
 import ForgotPassword from "@/pages/forgot-password";
 import ResetPassword from "@/pages/reset-password";
 import Profile from "@/pages/profile";
+import Admin from "@/pages/admin";
+import AdminSetup from "@/pages/admin-setup";
 import { useDepartmentResponseWatcher, useEmailSender } from "@/components/NotificationBell";
 
 const queryClient = new QueryClient();
@@ -65,8 +67,10 @@ function App() {
                       <Route path="/solution-bank" component={SolutionBank} />
                       <Route path="/memory-project" component={MemoryProject} />
                       <Route path="/library" component={Library} />
-                      <Route path="/profile" component={Profile} />
-                      <Route component={NotFound} />
+                       <Route path="/profile" component={Profile} />
+                       <Route path="/admin" component={Admin} />
+                       <Route path="/admin-setup" component={AdminSetup} />
+                       <Route component={NotFound} />
                     </Switch>
                   </MainLayout>
                 </ProtectedRoute>

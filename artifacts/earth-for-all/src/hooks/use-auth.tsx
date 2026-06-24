@@ -21,6 +21,8 @@ export interface UserProfile {
   avatar?: string;
   provider?: string;
   joinedAt?: string;
+  role?: string;
+  department?: string;
 }
 
 interface AuthContextType {
@@ -51,6 +53,8 @@ async function firebaseUserToProfile(fbUser: FirebaseUser): Promise<UserProfile>
     avatar: fbUser.photoURL || undefined,
     provider: fbUser.providerData[0]?.providerId || "email",
     joinedAt: fbUser.metadata.creationTime || new Date().toISOString(),
+    role: "user",
+    department: "",
   };
 }
 
@@ -71,6 +75,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             name: fbUser.displayName || fbUser.email?.split("@")[0] || "User",
             email: fbUser.email || "",
             provider: fbUser.providerData[0]?.providerId || "email",
+            role: "user",
+            department: "",
             joinedAt: serverTimestamp(),
           };
           await setDoc(profileRef, newProfile);
@@ -100,6 +106,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         name: cred.user.displayName || cred.user.email?.split("@")[0] || "User",
         email: cred.user.email || "",
         provider: "google.com",
+        role: "user",
+        department: "",
         joinedAt: serverTimestamp(),
       });
     }
@@ -113,6 +121,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       name,
       email,
       provider: "email",
+      role: "user",
+      department: "",
       joinedAt: serverTimestamp(),
     });
   }, []);

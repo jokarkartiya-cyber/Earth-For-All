@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { AnimatePresence, motion, useScroll, useTransform } from "framer-motion";
-import { Menu, X, Globe, Droplets, TreePine, Bird, Zap, Lightbulb, AlertTriangle, BookOpen, Database, LayoutDashboard, ChevronDown, FlaskConical, Satellite, Landmark, Library, Brain, Sprout, LogOut, User, ArrowRight } from "lucide-react";
+import { Menu, X, Globe, Droplets, TreePine, Bird, Zap, Lightbulb, AlertTriangle, BookOpen, Database, LayoutDashboard, ChevronDown, FlaskConical, Satellite, Landmark, Library, Brain, Sprout, LogOut, User, ArrowRight, Shield } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
@@ -173,6 +173,13 @@ export function Navbar() {
                           onClick={() => setIsUserOpen(false)}>
                           <User className="w-4 h-4" /> Profile
                         </Link>
+                        {user.role === "department" && (
+                          <Link href="/admin"
+                            className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm text-amber-400 hover:text-amber-300 hover:bg-amber-500/10 transition-all"
+                            onClick={() => setIsUserOpen(false)}>
+                            <Shield className="w-4 h-4" /> Admin Panel
+                          </Link>
+                        )}
                         <button onClick={async () => { await logout(); setIsUserOpen(false); }}
                           className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm text-red-400 hover:bg-red-500/10 transition-all">
                           <LogOut className="w-4 h-4" /> Sign out
@@ -271,6 +278,12 @@ export function Navbar() {
                     className="flex items-center gap-2 text-xs text-white/60 hover:text-white mb-2 transition-colors">
                     <User className="w-3.5 h-3.5" /> Profile
                   </Link>
+                  {user.role === "department" && (
+                    <Link href="/admin" onClick={() => setIsMobileMenuOpen(false)}
+                      className="flex items-center gap-2 text-xs text-amber-400 hover:text-amber-300 mb-2 transition-colors">
+                      <Shield className="w-3.5 h-3.5" /> Admin Panel
+                    </Link>
+                  )}
                   <button onClick={async () => { await logout(); setIsMobileMenuOpen(false); }}
                     className="flex items-center gap-2 text-xs text-red-400 hover:text-red-300 transition-colors">
                     <LogOut className="w-3.5 h-3.5" /> Sign out
