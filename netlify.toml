@@ -1,5 +1,5 @@
 [build]
-  command = "pnpm install --no-frozen-lockfile && pnpm --filter @workspace/earth-for-all run build"
+  command = "npx --yes pnpm@9 install --no-frozen-lockfile && npx --yes pnpm@9 --filter @workspace/earth-for-all run build"
   publish = "artifacts/earth-for-all/dist/public"
 
 [build.environment]
