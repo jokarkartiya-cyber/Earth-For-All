@@ -129,8 +129,7 @@ export function useDepartmentResponseWatcher() {
   useEffect(() => {
     const q = query(
       collection(db, "reports"),
-      where("departmentResponse", "!=", ""),
-      orderBy("departmentResponse"),
+      orderBy("createdAt", "desc"),
       limit(50)
     );
     const unsub = onSnapshot(q, async (snap) => {
@@ -162,7 +161,7 @@ export function useDepartmentResponseWatcher() {
             message: `${deptName} responded to ${categoryLabel} report`,
             reportId: docSnap.id,
             reportType: data.type,
-            department: data.assignedDepartment,
+            department: data.assignedDepartment || "",
             read: false,
             emailStatus: "pending",
             createdAt: data.departmentResponseAt,
