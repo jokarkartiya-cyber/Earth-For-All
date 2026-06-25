@@ -20,6 +20,21 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
+    chunkSizeWarningLimit: 2000,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes("node_modules/.pnpm/react@") || id.includes("node_modules/.pnpm/scheduler@")) return "vendor";
+          if (id.includes("node_modules/.pnpm/firebase@")) return "firebase";
+          if (id.includes("node_modules/.pnpm/leaflet@") || id.includes("node_modules/.pnpm/react-leaflet@")) return "leaflet";
+          if (id.includes("node_modules/.pnpm/framer-motion@")) return "framer";
+          if (id.includes("node_modules/.pnpm/lucide-react@")) return "icons";
+          if (id.includes("node_modules/.pnpm/@radix-ui")) return "ui";
+          if (id.includes("node_modules/.pnpm/tailwind-merge") || id.includes("node_modules/.pnpm/clsx") || id.includes("node_modules/.pnpm/class-variance-authority")) return "ui";
+          if (id.includes("node_modules/")) return "deps";
+        },
+      },
+    },
   },
   server: {
     port,
