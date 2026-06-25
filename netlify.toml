@@ -16,6 +16,11 @@
   VITE_APP_URL = "https://quiet-fairy-0a2398.netlify.app"
 
 [[redirects]]
+  from = "/ads.txt"
+  to = "/ads.txt"
+  status = 200
+
+[[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
