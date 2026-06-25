@@ -40,11 +40,16 @@ export function CommentSection({ itemId, itemType }: Props) {
     const q = query(
       collection(db, "comments"),
       where("itemId", "==", itemId),
-      where("itemType", "==", itemType),
-      orderBy("createdAt", "asc")
+      where("itemType", "==", itemType)
     );
     const unsub = onSnapshot(q, (snap) => {
-      setComments(snap.docs.map((d) => ({ id: d.id, ...d.data() } as Comment)));
+      const all = snap.docs.map((d) => ({ id: d.id, ...d.data() } as Comment));
+      all.sort((a, b) => {
+        const ta = a.createdAt?.toDate?.()?.getTime() || 0;
+        const tb = b.createdAt?.toDate?.()?.getTime() || 0;
+        return ta - tb;
+      });
+      setComments(all);
     });
     return unsub;
   }, [itemId, itemType]);
