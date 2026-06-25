@@ -6,7 +6,7 @@ import { db } from "@/lib/firebase";
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
 
-const SECRET_CODE = "earthforall-admin-2024";
+const SECRET_CODE = import.meta.env.VITE_ADMIN_SECRET_CODE || "earthforall-admin-2024";
 
 const DEPARTMENTS = [
   { id: "pollution-board", name: "Pollution Control Board", emoji: "🏭" },

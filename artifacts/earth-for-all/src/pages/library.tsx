@@ -167,11 +167,11 @@ function ResourceItem({ res, badge, comingSoon }: { res: { name: string; url: st
     </div>
   ) : (
     <a href={res.url} target="_blank" rel="noopener noreferrer"
-      className="group flex items-start gap-3 bg-white/[0.025] hover:bg-white/[0.06] border border-white/8 hover:border-white/20 rounded-xl px-4 py-3 transition-all">
+      className="group flex items-start gap-3 bg-white/[0.025] hover:bg-white/[0.06] border border-white/10 hover:border-white/20 rounded-xl px-4 py-3 transition-all">
       <div className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border shrink-0 mt-0.5 ${badge}`}>{res.extra}</div>
       <div className="flex-1">
         <div className="flex items-center gap-1.5">
-          <span className="text-white/85 font-semibold text-sm group-hover:text-white transition-colors">{res.name}</span>
+          <span className="text-white/105 font-semibold text-sm group-hover:text-white transition-colors">{res.name}</span>
           <ExternalLink className="w-3 h-3 text-white/20 group-hover:text-white/60 transition-colors opacity-0 group-hover:opacity-100" />
         </div>
         <p className="text-white/40 text-xs mt-0.5 leading-relaxed">{res.desc}</p>

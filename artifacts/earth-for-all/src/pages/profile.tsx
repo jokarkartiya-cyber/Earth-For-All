@@ -64,7 +64,7 @@ export default function Profile() {
           {stats.map(s => {
             const Icon = s.icon;
             return (
-              <div key={s.label} className="bg-white/[0.02] border border-white/8 rounded-xl p-4 text-center hover:bg-white/[0.04] transition-colors">
+              <div key={s.label} className="bg-white/[0.02] border border-white/10 rounded-xl p-4 text-center hover:bg-white/[0.04] transition-colors">
                 <Icon className={`w-5 h-5 ${s.color} mx-auto mb-2 opacity-80`} />
                 <div className={`text-lg font-bold ${s.color}`}>{s.count}</div>
                 <div className="text-[11px] text-white/35">{s.label}</div>
@@ -91,7 +91,7 @@ export default function Profile() {
               <div className="relative">
                 <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20" />
                 <input type="email" value={user.email} disabled
-                  className="w-full bg-transparent border border-white/8 rounded-xl py-3 pl-10 pr-4 text-white/40 text-sm cursor-not-allowed" />
+                  className="w-full bg-transparent border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white/40 text-sm cursor-not-allowed" />
               </div>
             </div>
             <button type="submit"

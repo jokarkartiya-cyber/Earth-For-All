@@ -158,7 +158,7 @@ export default function MemoryProject() {
                 <div className="flex items-center gap-3">
                   <span className="text-2xl">{mem.emoji}</span>
                   <div>
-                    <div className="font-semibold text-white/80 text-sm">{mem.author}</div>
+                    <div className="font-semibold text-white/100 text-sm">{mem.author}</div>
                     <div className="text-white/35 text-xs">{mem.era} — Oral History</div>
                   </div>
                 </div>
@@ -181,7 +181,7 @@ export default function MemoryProject() {
               <div className="px-6 py-3 border-t border-white/5 flex items-center justify-between">
                 <div className="flex flex-wrap gap-1">
                   {mem.tags.map(tag => (
-                    <span key={tag} className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 border border-white/8 text-white/35">{tag}</span>
+                    <span key={tag} className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-white/35">{tag}</span>
                   ))}
                 </div>
                 <button

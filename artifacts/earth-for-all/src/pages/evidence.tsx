@@ -260,7 +260,7 @@ const EVIDENCE_SECTIONS = [
       "Air-to-water machines — extract drinking water from humidity",
     ],
     sources: [
-      { name: "WIPO Green Patent Database", url: "https://www.wipo.int/wipog reen/en" },
+      { name: "WIPO Green Patent Database", url: "https://www.wipo.int/wipo-green/en" },
       { name: "Google Patents Clean Tech", url: "https://patents.google.com/?q=clean+technology" },
       { name: "IEA Innovation Tracker", url: "https://www.iea.org/data-and-statistics/data-tools/innovation-tracker" },
       { name: "Breakthrough Energy", url: "https://breakthroughenergy.org/our-work/innovation" },
@@ -423,7 +423,7 @@ export default function Evidence() {
                   {/* Stats */}
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     {sec.stats.map(stat => (
-                      <div key={stat.l} className="bg-white/5 border border-white/8 rounded-xl p-3 text-center">
+                      <div key={stat.l} className="bg-white/5 border border-white/10 rounded-xl p-3 text-center">
                         <div className="text-lg font-bold text-white">{stat.n}</div>
                         <div className="text-xs text-white/40 mt-0.5 leading-tight">{stat.l}</div>
                       </div>

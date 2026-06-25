@@ -155,7 +155,7 @@ export default function Admin() {
                 className={`px-3.5 py-2 rounded-lg text-xs font-medium border transition-all ${
                   statusFilter === s
                     ? "bg-emerald-600 border-emerald-500 text-white"
-                    : "bg-white/5 border-white/10 text-white/50 hover:text-white/80 hover:border-white/20"
+                    : "bg-white/5 border-white/10 text-white/50 hover:text-white/100 hover:border-white/20"
                 }`}>
                 {s === "all" ? "All" : s === "in-progress" ? "Under Review" : s.charAt(0).toUpperCase() + s.slice(1)}
               </button>

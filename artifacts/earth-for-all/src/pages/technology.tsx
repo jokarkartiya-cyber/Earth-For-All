@@ -179,7 +179,7 @@ export default function Technology() {
               <motion.div key={idea.q} variants={iv} className="bg-white/[0.03] border border-white/10 rounded-2xl overflow-hidden">
                 <div className="bg-indigo-900/20 px-5 py-3 flex items-center gap-3">
                   <div className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center text-xs">👤</div>
-                  <p className="text-white/80 text-sm font-medium">"{idea.q}"</p>
+                  <p className="text-white/100 text-sm font-medium">"{idea.q}"</p>
                 </div>
                 <div className="bg-emerald-900/10 px-5 py-3 flex items-start gap-3">
                   <div className="w-7 h-7 rounded-full bg-emerald-900/40 border border-emerald-700/40 flex items-center justify-center text-xs shrink-0">🤖</div>

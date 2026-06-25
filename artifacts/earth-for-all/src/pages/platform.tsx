@@ -343,7 +343,7 @@ export default function Platform() {
                   </div>
                   <div className="px-4 py-3 flex flex-wrap gap-1">
                     {table.columns.map((col, ci) => (
-                      <code key={`${table.id}-col-${ci}`} className="text-[10px] px-1.5 py-0.5 rounded bg-white/5 border border-white/8 text-white/50 font-mono">{col}</code>
+                      <code key={`${table.id}-col-${ci}`} className="text-[10px] px-1.5 py-0.5 rounded bg-white/5 border border-white/10 text-white/50 font-mono">{col}</code>
                     ))}
                   </div>
                 </motion.div>
@@ -364,7 +364,7 @@ export default function Platform() {
 
           <div className="space-y-5">
             {APIS.map((group) => (
-              <motion.div key={group.group} variants={iv} className="bg-white/[0.025] border border-white/8 rounded-2xl overflow-hidden">
+              <motion.div key={group.group} variants={iv} className="bg-white/[0.025] border border-white/10 rounded-2xl overflow-hidden">
                 <div className="px-5 py-3 border-b border-white/5">
                   <h3 className={`font-bold text-sm ${group.color}`}>{group.group}</h3>
                 </div>
@@ -373,7 +373,7 @@ export default function Platform() {
                     <a key={api.url} href={api.url} target="_blank" rel="noopener noreferrer"
                       className="group flex flex-col gap-0.5 bg-white/[0.02] hover:bg-white/[0.05] border border-white/5 hover:border-white/15 rounded-xl px-4 py-2.5 transition-all">
                       <div className="flex items-center gap-1.5">
-                        <span className="text-white/80 font-semibold text-sm group-hover:text-white transition-colors">{api.name}</span>
+                        <span className="text-white/100 font-semibold text-sm group-hover:text-white transition-colors">{api.name}</span>
                         <span className="text-[10px] px-1.5 py-0.5 rounded bg-indigo-900/50 text-indigo-400 border border-indigo-700/30">API</span>
                       </div>
                       <p className="text-white/35 text-xs">{api.use}</p>

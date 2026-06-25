@@ -189,7 +189,7 @@ function SolutionCard({ sol }: { sol: typeof SOLUTIONS[0] }) {
           {/* 4-column mini stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
             {d.evidence.map((e, i) => (
-              <div key={i} className="bg-white/[0.04] border border-white/8 rounded-xl px-3 py-2.5 text-xs text-white/60 leading-relaxed">{e}</div>
+              <div key={i} className="bg-white/[0.04] border border-white/10 rounded-xl px-3 py-2.5 text-xs text-white/60 leading-relaxed">{e}</div>
             ))}
           </div>
 
@@ -228,7 +228,7 @@ function SolutionCard({ sol }: { sol: typeof SOLUTIONS[0] }) {
             <div className="text-xs font-bold text-white/35 uppercase tracking-wider mb-2">Solutions</div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
               {d.solutions.map((s, i) => (
-                <div key={i} className="flex gap-2 bg-white/[0.03] border border-white/8 rounded-xl px-3 py-2.5">
+                <div key={i} className="flex gap-2 bg-white/[0.03] border border-white/10 rounded-xl px-3 py-2.5">
                   <span className="text-xs font-bold text-emerald-400 bg-emerald-900/40 border border-emerald-700/30 px-1.5 py-0.5 rounded h-fit shrink-0">{s.type}</span>
                   <span className="text-xs text-white/60 leading-relaxed">{s.text}</span>
                   {s.url && <a href={s.url} target="_blank" rel="noopener noreferrer" className="ml-auto shrink-0"><ExternalLink className="w-3 h-3 text-white/25 hover:text-white/60 transition-colors" /></a>}

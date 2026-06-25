@@ -105,7 +105,7 @@ export function NotificationBell() {
                   <div className="flex gap-3">
                     <div className="mt-0.5">{getIcon(n.type)}</div>
                     <div className="min-w-0 flex-1">
-                      <p className={`text-xs ${!n.read ? "text-white/80" : "text-white/50"} leading-relaxed`}>
+                      <p className={`text-xs ${!n.read ? "text-white/100" : "text-white/50"} leading-relaxed`}>
                         {n.message}
                       </p>
                       <p className="text-[10px] text-white/20 mt-1">
@@ -189,7 +189,7 @@ export function useEmailSender() {
         const appUrl = import.meta.env.VITE_APP_URL || "https://spontaneous-buttercream-c771ba.netlify.app";
 
         try {
-          const profilesSnap = await getDocs(collection(db, "profiles"));
+          const profilesSnap = await getDocs(query(collection(db, "profiles"), limit(100)));
           const emails: string[] = [];
           profilesSnap.forEach((p) => {
             const e = p.data().email;

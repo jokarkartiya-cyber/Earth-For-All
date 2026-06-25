@@ -216,7 +216,7 @@ const cv = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerCh
 function ResourceCard({ link, badge }: { link: { name: string; url: string; desc: string }; badge: string }) {
   return (
     <a href={link.url} target="_blank" rel="noopener noreferrer"
-      className="group flex items-start gap-3 bg-white/[0.025] hover:bg-white/[0.06] border border-white/8 hover:border-white/20 rounded-xl px-4 py-3 transition-all duration-200">
+      className="group flex items-start gap-3 bg-white/[0.025] hover:bg-white/[0.06] border border-white/10 hover:border-white/20 rounded-xl px-4 py-3 transition-all duration-200">
       <div className={`inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border shrink-0 mt-0.5 ${badge}`}>
         <ExternalLink className="w-2.5 h-2.5" />
       </div>

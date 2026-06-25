@@ -152,7 +152,7 @@ export default function LiveEarth() {
                   {/* City Cards */}
                   <div className="mt-5 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
                     {Array.isArray(airQuality) && airQuality.slice(0, 12).map(aq => (
-                      <div key={aq.id} className="bg-white/[0.03] border border-white/8 rounded-xl p-2.5 text-center">
+                      <div key={aq.id} className="bg-white/[0.03] border border-white/10 rounded-xl p-2.5 text-center">
                         <div className="text-xs text-white/50 mb-1">{aq.city}</div>
                         <div className="text-xl font-bold font-mono" style={{ color: AQI_COLOR(aq.aqi) }}>{aq.aqi}</div>
                         <div className={`text-[9px] mt-1 px-1.5 py-0.5 rounded-full border inline-block ${STATUS_COLOR[aq.status] ?? "text-white/40 border-white/10"}`}>{aq.status}</div>
@@ -197,7 +197,7 @@ export default function LiveEarth() {
                   </div>
                   <div className="mt-5 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
                     {Array.isArray(forestData) && forestData.slice(0, 10).map(fd => (
-                      <div key={fd.id} className="bg-white/[0.03] border border-white/8 rounded-xl p-2.5 text-center">
+                      <div key={fd.id} className="bg-white/[0.03] border border-white/10 rounded-xl p-2.5 text-center">
                         <div className="text-[10px] text-white/40 mb-1 truncate">{fd.country}</div>
                         <div className="text-base font-bold text-green-400">{fd.forestAreaMha}M</div>
                         <div className="text-[9px] text-white/30">hectares</div>

@@ -3,7 +3,7 @@ import { motion, useScroll, useTransform } from "framer-motion";
 import { Link } from "wouter";
 import { useRef } from "react";
 import { ArrowRight, Globe, Lightbulb, AlertTriangle, BookOpen, TrendingUp, Leaf, Sun, Heart, MessageSquare } from "lucide-react";
-import { collection, query, orderBy, limit, onSnapshot, getDocs } from "firebase/firestore";
+import { collection, query, orderBy, limit, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 
@@ -159,7 +159,7 @@ export default function Home() {
               <div className={`text-xs font-semibold uppercase tracking-widest mb-1 ${todayTip.color}`}>
                 आज का Green Tip — {todayTip.action}
               </div>
-              <p className="text-white/80 text-sm leading-relaxed">{todayTip.tip}</p>
+              <p className="text-white/100 text-sm leading-relaxed">{todayTip.tip}</p>
             </div>
           </div>
         </motion.div>

@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import {
   AlertTriangle, MapPin, ExternalLink, Image, Video, MessageSquare,
   Shield, Clock, User, Phone, Mail, Eye, EyeOff, Building2, ChevronRight,
-  ArrowRight, CheckCircle2, SendHorizonal, Reply,
+  ArrowRight, CheckCircle2, SendHorizonal,
 } from "lucide-react";
 import { collection, query, orderBy, onSnapshot, addDoc, updateDoc, doc, setDoc, serverTimestamp, Timestamp, arrayUnion } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -231,7 +231,7 @@ export default function Report() {
                       </div>
                       <div className="min-w-0">
                         <p className="text-[10px] text-white/30 uppercase tracking-wider mb-0.5">Assigned Department</p>
-                        <p className="text-white/80 text-sm font-medium">{assignedDept.name}</p>
+                        <p className="text-white/100 text-sm font-medium">{assignedDept.name}</p>
                         <p className="text-white/40 text-xs">{assignedDept.tagline}</p>
                         <div className="flex items-center gap-1 mt-1.5 text-[10px] text-emerald-400">
                           <ArrowRight className="w-3 h-3" /> Will be notified automatically
@@ -410,7 +410,7 @@ function ReportCard({ report }: { report: Report }) {
           <div className="flex items-center gap-2.5">
             <img src={avatar} alt="" className="w-7 h-7 rounded-full bg-white/5" />
             <div>
-              <p className="text-white/80 text-xs font-medium">
+              <p className="text-white/100 text-xs font-medium">
                 {report.reporterName || "Anonymous"}
               </p>
               <p className="text-white/20 text-[10px] flex items-center gap-1">
